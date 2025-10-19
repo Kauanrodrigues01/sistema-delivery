@@ -19,18 +19,36 @@ class CheckoutView(TemplateView):
         context = super().get_context_data(**kwargs)
         cart = get_cart(self.request)
         cart_items = cart.items.select_related("product").all()
-        context["cart_total"] = cart.total_price
         context["cart_items"] = cart_items
+        context["cart_total"] = cart.total_price
         context["cart_count"] = cart.total_quantity
+
+        # Adicionar dados do cliente se logado
+        if self.request.user.is_authenticated and hasattr(
+            self.request.user, "customer_profile"
+        ):
+            customer = self.request.user.customer_profile
+            context["customer"] = customer
+
         return context
 
     def post(self, request, *args, **kwargs):
         cart = get_cart(request)
+        # Uma única consulta otimizada para todos os itens
         cart_items = cart.items.select_related("product").all()
 
+        # Separar itens ativos e inativos em memória (evita query adicional)
+        active_items = []
+        inactive_items = []
+
+        for item in cart_items:
+            if item.product.is_active:
+                active_items.append(item)
+            else:
+                inactive_items.append(item)
+
         # SEGURANÇA: Verificar se há produtos inativos no carrinho
-        inactive_items = cart_items.filter(product__is_active=False)
-        if inactive_items.exists():
+        if inactive_items:
             context = self.get_context_data()
             context["error_message"] = (
                 "Seu carrinho contém produtos que não estão mais disponíveis. Remova-os antes de continuar."
@@ -40,17 +58,15 @@ class CheckoutView(TemplateView):
             ]
             return render(request, "checkout/error.html", context)
 
-        # Filtrar apenas produtos ativos para o checkout
-        cart_items = cart_items.filter(product__is_active=True)
-
-        if not cart_items.exists():
+        if not active_items:
             context = self.get_context_data()
             context["error_message"] = (
                 "Seu carrinho está vazio ou todos os produtos estão indisponíveis."
             )
             return render(request, "checkout/error.html", context)
 
-        total = cart.total_price  # Usando a propriedade do modelo
+        # Calcular total usando os itens ativos em memória
+        total = sum(item.quantity * item.product.price for item in active_items)
         name = request.POST.get("name")
         phone = request.POST.get("phone")
         cpf = request.POST.get("cpf", "").strip()
@@ -78,8 +94,16 @@ class CheckoutView(TemplateView):
                 payment_method=payment_method,
                 cash_value=cash_value if payment_method == "dinheiro" else None,
                 payment_status="pending",
+                customer=(
+                    self.request.user.customer_profile
+                    if (
+                        self.request.user.is_authenticated
+                        and hasattr(self.request.user, "customer_profile")
+                    )
+                    else None
+                ),
             )
-            for item in cart_items:
+            for item in active_items:
                 OrderItem.objects.create(
                     order=order,
                     product=item.product,
@@ -248,7 +272,6 @@ def check_payment_status(request, order_id):
                 )
 
             payment_info = get_payment_info(order.payment_id)
-
 
             return JsonResponse(
                 {

@@ -111,9 +111,22 @@ class Order(models.Model):
         ("paid", "Pago"),
         ("cancelled", "Cancelado/Devolvido"),
     ]
+
+    # Campo opcional para vincular cliente fiel
+    customer = models.ForeignKey(
+        "customers.Customer",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="orders",
+        help_text="Cliente fiel que fez o pedido (se logado)",
+    )
+
     customer_name = models.CharField(max_length=100)
     phone = models.CharField(max_length=20, db_index=True)
-    cpf = models.CharField(max_length=14, blank=True, null=True, help_text="CPF do cliente")
+    cpf = models.CharField(
+        max_length=14, blank=True, null=True, help_text="CPF do cliente"
+    )
     address = models.TextField()
     payment_method = models.CharField(
         max_length=20, choices=PAYMENT_CHOICES, default="pix", db_index=True
@@ -136,7 +149,9 @@ class Order(models.Model):
         help_text="URL do pagamento no MercadoPago (para cartão)",
     )
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending", db_index=True)
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default="pending", db_index=True
+    )
 
     objects = OrderQuerySet.as_manager()
 
@@ -153,7 +168,9 @@ class Order(models.Model):
         from decimal import Decimal
 
         if self.payment_method == "dinheiro" and self.cash_value:
-            return max(Decimal("0.00"), self.cash_value - Decimal(str(self.total_price)))
+            return max(
+                Decimal("0.00"), self.cash_value - Decimal(str(self.total_price))
+            )
         return Decimal("0.00")
 
     @property
@@ -195,10 +212,10 @@ class Order(models.Model):
         verbose_name = "Pedido"
         verbose_name_plural = "Pedidos"
         indexes = [
-            models.Index(fields=['status', 'payment_status']),
-            models.Index(fields=['created_at', 'status']),
-            models.Index(fields=['payment_method', 'payment_status']),
-            models.Index(fields=['phone', 'created_at']),
+            models.Index(fields=["status", "payment_status"]),
+            models.Index(fields=["created_at", "status"]),
+            models.Index(fields=["payment_method", "payment_status"]),
+            models.Index(fields=["phone", "created_at"]),
         ]
 
 

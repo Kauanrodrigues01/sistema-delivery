@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Cliente{% endblock %}
+
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'global/styles.css' %}">
+<link rel="stylesheet" href="{% static 'global/form-default-style.css' %}">
+<link rel="stylesheet" href="{% static 'global/buttons-default-style.css' %}">
+<style>
+  .login-container {
+    max-width: 400px;
+    margin: 4rem auto;
+    padding: 2rem;
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  .login-title {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: var(--foreground);
+  }
+
+  .login-subtitle {
+    text-align: center;
+    color: var(--muted-foreground);
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+  }
+
+  .error-message {
+    background: #fee;
+    color: #c33;
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .form-footer {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--muted-foreground);
+  }
+
+  .form-footer a {
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  .form-footer a:hover {
+    text-decoration: underline;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+  <div class="login-container">
+    <h2 class="login-title">Bem-vindo de volta!</h2>
+    <p class="login-subtitle">Faça login para aproveitar vantagens exclusivas</p>
+
+    {% if error %}
+    <div class="error-message">
+      {{ error }}
+    </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label for="username">Usuário</label>
+        <input type="text" id="username" name="username" class="form-control" required autofocus
+          autocomplete="username">
+      </div>
+
+      <div class="form-group">
+        <label for="password">Senha</label>
+        <input type="password" id="password" name="password" class="form-control" required
+          autocomplete="current-password">
+      </div>
+
+      <button type="submit" class="add-btn w-100">Entrar</button>
+    </form>
+
+    <div class="form-footer">
+      <p>Não é cliente? <a href="{% url 'product_list' %}">Continue sem login</a></p>
+      <p style="margin-top: 0.5rem;">
+        <small>Cliente fiel? Peça ao administrador para criar sua conta.</small>
+      </p>
+    </div>
+  </div>
+</main>
+{% endblock %}

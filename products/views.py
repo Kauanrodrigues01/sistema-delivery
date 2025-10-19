@@ -62,7 +62,7 @@ class ProductListView(ListView):
         return context
 
     def get(self, request, *args, **kwargs):
-        if self.request.user.is_authenticated:
+        if self.request.user.is_authenticated and self.request.user.is_superuser:
             return redirect("dashboard:dashboard")
         return super().get(request, *args, **kwargs)
 

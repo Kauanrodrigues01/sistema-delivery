@@ -43,4 +43,14 @@ urlpatterns = [
         views.order_cancel_payment,
         name="order_cancel_payment",
     ),
+    # Customer URLs
+    path("customers/", views.customer_list, name="customer_list"),
+    path("customers/create/", views.customer_create, name="customer_create"),
+    path("customers/<int:pk>/edit/", views.customer_edit, name="customer_edit"),
+    path("customers/<int:pk>/delete/", views.customer_delete, name="customer_delete"),
+    path(
+        "customers/<int:pk>/toggle-active/",
+        views.customer_toggle_active,
+        name="customer_toggle_active",
+    ),
 ]

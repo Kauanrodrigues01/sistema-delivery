@@ -1,0 +1,588 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block head %}
+<!-- Algumas classes de estilização usadas aqui são as mesmas do que o app products então vamos usar para não repetir código -->
+<link rel="stylesheet" href="{% static 'products/styles.css' %}">
+<link rel="stylesheet" href="{% static 'dashboard/product_list.css' %}">
+
+
+<link rel="stylesheet" href="{% static 'global/form-default-style.css' %}">
+<link rel="stylesheet" href="{% static 'global/buttons-default-style.css' %}">
+<link rel="stylesheet" href="{% static 'components/pagination/pagination.css' %}">
+<style>
+  /* Estilos da tabela de clientes */
+  .customer-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    margin-bottom: 2rem;
+  }
+
+  .customer-table thead {
+    background: var(--gradient-header);
+    color: white;
+  }
+
+  .customer-table th,
+  .customer-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .customer-table tbody tr {
+    transition: var(--transition-fast);
+  }
+
+  .customer-table tbody tr:hover {
+    background: var(--muted);
+  }
+
+  .customer-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .status-active {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .status-inactive {
+    background: #f8d7da;
+    color: #721c24;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .action-buttons button {
+    background: none;
+    border: none;
+    color: var(--primary-dark);
+    text-decoration: none;
+    font-weight: bold;
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .action-buttons button:hover {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    transform: scale(1.05);
+  }
+
+  .action-buttons .delete-btn:hover {
+    background: var(--destructive);
+    color: var(--destructive-foreground);
+  }
+
+  /* Estilos do formulário */
+  .w-100 {
+    width: 100%;
+  }
+
+  .form-text {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+  }
+
+  .text-muted {
+    color: var(--muted-foreground);
+  }
+
+  /* Checkbox customizado */
+  .checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--muted);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: var(--transition-fast);
+  }
+
+  .checkbox-wrapper:hover {
+    background: var(--border);
+  }
+
+  .checkbox-wrapper input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+    accent-color: var(--primary);
+  }
+
+  .checkbox-wrapper label {
+    margin: 0;
+    cursor: pointer;
+    font-weight: 500;
+    user-select: none;
+  }
+
+  /* Modal Styles - Seguindo padrão do product_list */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  .modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-content {
+    background-color: var(--card);
+    margin: 2rem auto;
+    padding: 2rem;
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 600px;
+    box-shadow: var(--shadow-hover);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    color: var(--foreground);
+  }
+
+  .close {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    background: none;
+    border: none;
+    line-height: 1;
+  }
+
+  .close:hover {
+    color: var(--foreground);
+  }
+
+  .cancel-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 1rem;
+    transition: var(--transition);
+  }
+
+  .cancel-btn:hover {
+    background: #5a6268;
+  }
+
+  /* Classe para centralizar texto em células */
+  .text-center {
+    text-align: center;
+  }
+
+  .padding-2rem {
+    padding: 2rem;
+  }
+
+  /* Classe para flex container de filtros */
+  .filters-container {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* Classe para botões do formulário */
+  .form-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .customer-table {
+      font-size: 0.85rem;
+      display: block;
+      overflow-x: auto;
+    }
+
+    .customer-table th,
+    .customer-table td {
+      padding: 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    .action-buttons {
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .action-buttons button {
+      width: 100%;
+      padding: 0.5rem;
+    }
+
+    .modal-content {
+      width: 95%;
+      margin: 1rem auto;
+      padding: 1.5rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+  <div class="container">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <h2>Gerenciamento de Clientes</h2>
+      <p>
+        Aqui você pode gerenciar os clientes cadastrados que podem fazer login para ter vantagens no checkout.
+
+        <br>
+        Avisos:
+        <br>
+        <span class="warning">Clientes desativados não podem fazer login no sistema</span>
+      </p>
+    </section>
+
+    <!-- Filters Section -->
+    <section class="products-filters">
+      <p>Use os filtros abaixo para buscar clientes específicos:</p>
+      <form method="GET" action="">
+        <input type="text" name="search" placeholder="Buscar por nome, telefone, CPF ou usuário..." id="searchInput"
+          class="form-control" value="{{ search_query }}">
+        {% if status_filter %}
+        <input type="hidden" name="status" value="{{ status_filter }}">
+        {% endif %}
+      </form>
+      <div class="filters-container">
+        <select id="statusFilter" class="form-control">
+          <option value="">Todos os Status</option>
+          <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Ativos</option>
+          <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inativos</option>
+        </select>
+      </div>
+    </section>
+
+    <button class="add-btn add-space-bottom" id="addCustomerButton">Adicionar Cliente</button>
+
+    <!-- Customers Table -->
+    <section>
+      <table class="customer-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Usuário</th>
+            <th>Telefone</th>
+            <th>CPF</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for customer in customers %}
+          <tr data-id="{{ customer.id }}">
+            <td>{{ customer.full_name }}</td>
+            <td>{{ customer.user.username }}</td>
+            <td>{{ customer.phone }}</td>
+            <td>{{ customer.cpf|default:"Não informado" }}</td>
+            <td>
+              <span class="status-badge {% if customer.is_active %}status-active{% else %}status-inactive{% endif %}">
+                {% if customer.is_active %}Ativo{% else %}Inativo{% endif %}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button class="edit-btn" onclick="editCustomer({{ customer.id }})">Editar</button>
+                <button class="delete-btn" onclick="deleteCustomer({{ customer.id }})">Excluir</button>
+                <button class="toggle-btn" onclick="toggleCustomer({{ customer.id }})">
+                  {% if customer.is_active %}Desativar{% else %}Ativar{% endif %}
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center padding-2rem">
+              Nenhum cliente cadastrado.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    {% include "components/pagination.html" with page_obj=page_obj %}
+    {% endif %}
+  </div>
+</main>
+
+<!-- Modal Add/Edit Customer -->
+<div id="customerModal" class="modal">
+  <div class="modal-content form-section">
+    <div class="modal-header">
+      <h3 id="modalTitle" class="form-title">Adicionar Cliente</h3>
+      <button class="close" onclick="closeModal()">&times;</button>
+    </div>
+    <form id="customerForm" method="POST">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="username">Usuário *</label>
+        <input type="text" id="username" name="username" class="form-control" required autocomplete="username">
+        <small class="form-text text-muted">Nome de usuário para login (único no sistema)</small>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Senha *</label>
+        <input type="password" id="password" name="password" class="form-control" required autocomplete="new-password">
+        <small class="form-text text-muted" id="passwordHelp">Digite a senha para o cliente</small>
+      </div>
+
+      <div class="form-group">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" name="email" class="form-control" autocomplete="email">
+      </div>
+
+      <div class="form-group">
+        <label for="full_name">Nome Completo *</label>
+        <input type="text" id="full_name" name="full_name" class="form-control" required autocomplete="name">
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Telefone *</label>
+        <input type="tel" id="phone" name="phone" class="form-control" required placeholder="(99) 99999-9999"
+          maxlength="15" autocomplete="tel">
+      </div>
+
+      <div class="form-group">
+        <label for="cpf">CPF</label>
+        <input type="text" id="cpf" name="cpf" class="form-control" placeholder="000.000.000-00" maxlength="14">
+        <small class="form-text text-muted">Opcional, mas recomendado</small>
+      </div>
+
+      <div class="form-group">
+        <label for="address">Endereço *</label>
+        <input type="text" id="address" name="address" class="form-control" required
+          placeholder="Ex: Rua das Flores, 123 - Centro" autocomplete="street-address">
+      </div>
+
+      <div class="form-group">
+        <div class="checkbox-wrapper">
+          <input type="checkbox" id="is_active" name="is_active" value="true" checked>
+          <label for="is_active">Cliente Ativo</label>
+        </div>
+        <small class="form-text text-muted">Clientes inativos não podem fazer login no sistema</small>
+      </div>
+
+      <div class="form-buttons">
+        <button type="submit" class="add-btn w-100">Salvar</button>
+        <button type="button" class="cancel-btn w-100" onclick="closeModal()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  let editingCustomerId = null;
+
+  // Função genérica para abrir e fechar modais (seguindo padrão do product_list)
+  function toggleModal(modalId, show = true) {
+    const modal = document.getElementById(modalId);
+    if (show) {
+      modal.classList.add('show');
+    } else {
+      modal.classList.remove('show');
+    }
+  }
+
+  // Modal functions
+  function openModal(title, actionUrl) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('customerForm').action = actionUrl;
+    toggleModal('customerModal', true);
+  }
+
+  function closeModal() {
+    toggleModal('customerModal', false);
+    document.getElementById('customerForm').reset();
+    editingCustomerId = null;
+
+    // Resetar campos
+    document.getElementById('username').disabled = false;
+    document.getElementById('password').required = true;
+    document.getElementById('passwordHelp').textContent = 'Digite a senha para o cliente';
+  }
+
+  // Add customer
+  document.getElementById('addCustomerButton').addEventListener('click', function () {
+    openModal('Adicionar Cliente', '{% url "dashboard:customer_create" %}');
+  });
+
+  // Edit customer
+  function editCustomer(customerId) {
+    const row = document.querySelector(`tr[data-id="${customerId}"]`);
+    const cells = row.querySelectorAll('td');
+
+    editingCustomerId = customerId;
+
+    // Preencher formulário
+    document.getElementById('full_name').value = cells[0].textContent;
+    document.getElementById('username').value = cells[1].textContent;
+    document.getElementById('username').disabled = true; // Não permitir alterar username
+    document.getElementById('phone').value = cells[2].textContent;
+
+    const cpfText = cells[3].textContent.trim();
+    document.getElementById('cpf').value = cpfText !== 'Não informado' ? cpfText : '';
+
+    const isActive = cells[4].querySelector('.status-active') !== null;
+    document.getElementById('is_active').checked = isActive;
+
+    // Senha opcional na edição
+    document.getElementById('password').required = false;
+    document.getElementById('passwordHelp').textContent = 'Deixe em branco para manter a senha atual';
+
+    openModal('Editar Cliente', `{% url "dashboard:customer_list" %}${customerId}/edit/`);
+  }
+
+  // Delete customer
+  function deleteCustomer(customerId) {
+    if (confirm('Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita e o usuário associado também será removido.')) {
+      fetch(`{% url "dashboard:customer_list" %}${customerId}/delete/`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken')
+        }
+      }).then(() => location.reload());
+    }
+  }
+
+  // Toggle active
+  function toggleCustomer(customerId) {
+    fetch(`{% url "dashboard:customer_list" %}${customerId}/toggle-active/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken')
+      }
+    }).then(() => location.reload());
+  }
+
+  // Filters
+  document.getElementById('statusFilter').addEventListener('change', function () {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (this.value) {
+      searchParams.set('status', this.value);
+    } else {
+      searchParams.delete('status');
+    }
+    window.location.search = searchParams.toString();
+  });
+
+  // Search
+  document.getElementById('searchInput').addEventListener('input', function () {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (this.value) {
+      searchParams.set('search', this.value);
+    } else {
+      searchParams.delete('search');
+    }
+    window.location.search = searchParams.toString();
+  });
+
+  // Phone mask
+  document.getElementById('phone').addEventListener('input', function (e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 11) value = value.slice(0, 11);
+    if (value.length > 2) {
+      value = '(' + value.slice(0, 2) + ') ' + value.slice(2);
+    }
+    if (value.length > 10) {
+      value = value.slice(0, 10) + '-' + value.slice(10);
+    } else if (value.length > 6) {
+      value = value.slice(0, 9) + '-' + value.slice(9);
+    }
+    e.target.value = value;
+  });
+
+  // CPF mask
+  document.getElementById('cpf').addEventListener('input', function (e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 11) value = value.slice(0, 11);
+
+    if (value.length > 3) {
+      value = value.slice(0, 3) + '.' + value.slice(3);
+    }
+    if (value.length > 7) {
+      value = value.slice(0, 7) + '.' + value.slice(7);
+    }
+    if (value.length > 11) {
+      value = value.slice(0, 11) + '-' + value.slice(11);
+    }
+    e.target.value = value;
+  });
+
+  // CSRF Token
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // Close modal on outside click (seguindo padrão do product_list)
+  window.addEventListener('click', (event) => {
+    if (event.target === document.getElementById('customerModal')) {
+      toggleModal('customerModal', false);
+    }
+  });
+</script>
+{% endblock %}

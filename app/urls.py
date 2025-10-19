@@ -24,6 +24,7 @@ from core.views import cache_stats_view, health_check
 urlpatterns = [
     path("", RedirectView.as_view(url=reverse_lazy("product_list"), permanent=False)),
     path("admin/", admin.site.urls),
+    path("customers/", include("customers.urls")),
     path("products/", include("products.urls")),
     path("cart/", include("cart.urls")),
     path("checkout/", include("checkout.urls")),

@@ -18,7 +18,9 @@ def get_status_debug(request):
 def increase_cart_item(request):
     product_id = request.POST.get("product_id")
     cart = get_cart(request)
-    item = get_object_or_404(CartItem, cart=cart, product_id=product_id)
+    item = get_object_or_404(
+        CartItem.objects.select_related("product"), cart=cart, product_id=product_id
+    )
 
     # SEGURANÇA: Verificar se produto ainda está ativo
     if not item.product.is_active:
@@ -37,7 +39,9 @@ def increase_cart_item(request):
 def decrease_cart_item(request):
     product_id = request.POST.get("product_id")
     cart = get_cart(request)
-    item = get_object_or_404(CartItem, cart=cart, product_id=product_id)
+    item = get_object_or_404(
+        CartItem.objects.select_related("product"), cart=cart, product_id=product_id
+    )
 
     # SEGURANÇA: Verificar se produto ainda está ativo (permite remoção mesmo se inativo)
     if not item.product.is_active:
@@ -45,8 +49,12 @@ def decrease_cart_item(request):
         item.delete()
         cart_total = cart.total_price
         return JsonResponse(
-            {"success": True, "quantity": 0, "cart_total": float(cart_total),
-             "message": "Produto removido (não disponível)"}
+            {
+                "success": True,
+                "quantity": 0,
+                "cart_total": float(cart_total),
+                "message": "Produto removido (não disponível)",
+            }
         )
 
     if item.quantity > 1:
@@ -73,7 +81,9 @@ def decrease_cart_item(request):
 def remove_cart_item(request):
     product_id = request.POST.get("product_id")
     cart = get_cart(request)
-    item = get_object_or_404(CartItem, cart=cart, product_id=product_id)
+    item = get_object_or_404(
+        CartItem.objects.select_related("product"), cart=cart, product_id=product_id
+    )
     item.delete()
     cart_total = cart.total_price
     return JsonResponse({"success": True, "cart_total": float(cart_total)})

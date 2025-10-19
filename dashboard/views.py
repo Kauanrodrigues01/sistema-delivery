@@ -1,10 +1,12 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.db import models, transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods, require_POST
 
 from checkout.models import Order, OrderItem
+from customers.models import Customer
 from products.models import Category, Product
 
 from .utils.metrics import calculate_metrics
@@ -17,6 +19,12 @@ def login_view(request):
         password = request.POST["password"]
         user = authenticate(request, username=username, password=password)
         if user is not None:
+            if not user.is_superuser:
+                return render(
+                    request,
+                    "dashboard/login.html",
+                    {"error": "Acesso negado. Usuário não é administrador."},
+                )
             login(request, user)
             return redirect("dashboard:dashboard")
         else:
@@ -29,6 +37,8 @@ def login_view(request):
 # Dashboard view
 @login_required
 def dashboard_view(request):
+    if not request.user.is_superuser:
+        return redirect("product_list")
     metrics = calculate_metrics()
     return render(request, "dashboard/dashboard.html", {"metrics": metrics})
 
@@ -36,6 +46,9 @@ def dashboard_view(request):
 # Product CRUD views
 @login_required
 def product_list(request):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     # Get filter parameters from the request
     status_filter = request.GET.get("status")
     category_filter = request.GET.get("category")
@@ -88,6 +101,9 @@ def product_list(request):
 @login_required
 @require_POST
 def product_create(request):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     name = request.POST.get("name")
     price = request.POST.get("price")
     image = request.FILES.get("image")
@@ -105,6 +121,9 @@ def product_create(request):
 @login_required
 @require_POST
 def product_edit(request, pk):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     product = Product.objects.get(pk=pk)
     product.name = request.POST["name"]
     product.price = request.POST["price"]
@@ -121,6 +140,9 @@ def product_edit(request, pk):
 @login_required
 @require_http_methods(["DELETE"])
 def product_delete(request, pk):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     product = Product.objects.get(pk=pk)
     product.delete()
     return redirect("dashboard:product_list")
@@ -129,6 +151,9 @@ def product_delete(request, pk):
 @login_required
 @require_POST
 def product_toggle_active(request, pk):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     product = Product.objects.get(pk=pk)
     product.is_active = not product.is_active
     product.save()
@@ -138,6 +163,9 @@ def product_toggle_active(request, pk):
 # Logout view
 @login_required
 def logout_view(request):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     logout(request)
     return redirect("dashboard:login")
 
@@ -145,6 +173,9 @@ def logout_view(request):
 # Order CRUD views
 @login_required
 def order_list(request):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     # Get filter parameters from the request
     status_filter = request.GET.get("status")
     payment_status_filter = request.GET.get("payment_status")
@@ -210,12 +241,18 @@ def order_list(request):
 
 @login_required
 def order_detail(request, pk):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     order = get_object_or_404(Order, pk=pk)
     return render(request, "dashboard/order_detail.html", {"order": order})
 
 
 @login_required
 def order_create(request):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     if request.method == "POST":
         customer_name = request.POST.get("customer_name")
         phone = request.POST.get("phone")
@@ -249,6 +286,9 @@ def order_create(request):
 
 @login_required
 def order_edit(request, pk):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     order = get_object_or_404(Order, pk=pk)
 
     # Não permitir editar pedido se não pode editar informações básicas (finalizado)
@@ -318,6 +358,9 @@ def order_edit(request, pk):
 @login_required
 @require_http_methods(["POST"])
 def order_cancel(request, pk):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     order = get_object_or_404(Order, pk=pk)
     # Não permitir cancelar pedido se está finalizado (concluído e pago)
     if order.is_finalized:
@@ -343,6 +386,9 @@ def order_cancel(request, pk):
 @login_required
 @require_POST
 def order_toggle_status(request, pk):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     order = get_object_or_404(Order, pk=pk)
     # Não permitir alterar status de pedidos cancelados
     if order.status == "cancelled":
@@ -363,6 +409,9 @@ def order_toggle_status(request, pk):
 @login_required
 @require_POST
 def order_toggle_payment_status(request, pk):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     order = get_object_or_404(Order, pk=pk)
     # Permitir alteração apenas se o pagamento não estiver cancelado
     if order.payment_status == "cancelled":
@@ -384,6 +433,9 @@ def order_toggle_payment_status(request, pk):
 @login_required
 @require_POST
 def order_cancel_payment(request, pk):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     order = get_object_or_404(Order, pk=pk)
     # Não permitir cancelar pagamento se pedido está finalizado (concluído e pago)
     if order.is_finalized:
@@ -399,6 +451,9 @@ def order_cancel_payment(request, pk):
 # Category CRUD views
 @login_required
 def category_list(request):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     # Get filter parameters from the request
     search_query = request.GET.get("search", "")
 
@@ -434,6 +489,9 @@ def category_list(request):
 @login_required
 @require_POST
 def category_create(request):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     name = request.POST.get("name")
     description = request.POST.get("description", "")
 
@@ -445,6 +503,9 @@ def category_create(request):
 @login_required
 @require_POST
 def category_edit(request, pk):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     category = Category.objects.get(pk=pk)
     category.name = request.POST["name"]
     category.description = request.POST.get("description", "")
@@ -455,6 +516,9 @@ def category_edit(request, pk):
 @login_required
 @require_http_methods(["DELETE"])
 def category_delete(request, pk):
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
     category = Category.objects.get(pk=pk)
     # Verificar se existem produtos usando esta categoria
     if category.products.exists():
@@ -462,3 +526,150 @@ def category_delete(request, pk):
         return redirect("dashboard:category_list")
     category.delete()
     return redirect("dashboard:category_list")
+
+
+# Customer CRUD views
+@login_required
+def customer_list(request):
+    """Lista todos os clientes fiéis"""
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
+    search_query = request.GET.get("search", "")
+    status_filter = request.GET.get("status", "")
+
+    customers = Customer.objects.select_related("user").all()
+
+    # Filtro de busca
+    if search_query:
+        customers = customers.filter(
+            models.Q(full_name__icontains=search_query)
+            | models.Q(phone__icontains=search_query)
+            | models.Q(cpf__icontains=search_query)
+            | models.Q(user__username__icontains=search_query)
+        )
+
+    # Filtro por status
+    if status_filter == "active":
+        customers = customers.filter(is_active=True)
+    elif status_filter == "inactive":
+        customers = customers.filter(is_active=False)
+
+    customers = customers.order_by("-created_at")
+
+    # Paginação
+    from django.core.paginator import Paginator
+
+    paginator = Paginator(customers, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        "dashboard/customer_list.html",
+        {
+            "customers": page_obj,
+            "search_query": search_query,
+            "status_filter": status_filter,
+            "page_obj": page_obj,
+            "is_paginated": page_obj.has_other_pages(),
+        },
+    )
+
+
+@login_required
+@require_POST
+def customer_create(request):
+    """Criar novo cliente fiel"""
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
+    try:
+        with transaction.atomic():
+            # Criar usuário Django
+            username = request.POST.get("username")
+            password = request.POST.get("password")
+            email = request.POST.get("email", "")
+
+            # Verificar se username já existe
+            if User.objects.filter(username=username).exists():
+                # TODO: Retornar erro via mensagem
+                return redirect("dashboard:customer_list")
+
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                email=email,
+                is_superuser=False,
+                is_staff=False,
+            )
+
+            # Criar perfil de cliente
+            Customer.objects.create(
+                user=user,
+                full_name=request.POST.get("full_name"),
+                phone=request.POST.get("phone"),
+                cpf=request.POST.get("cpf") or None,
+                address=request.POST.get("address"),
+                is_active=request.POST.get("is_active") == "true",
+            )
+    except Exception as e:
+        print(f"Erro ao criar cliente: {e}")
+
+    return redirect("dashboard:customer_list")
+
+
+@login_required
+@require_POST
+def customer_edit(request, pk):
+    """Editar cliente existente"""
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
+    customer = get_object_or_404(Customer, pk=pk)
+
+    customer.full_name = request.POST.get("full_name")
+    customer.phone = request.POST.get("phone")
+    customer.cpf = request.POST.get("cpf") or None
+    customer.address = request.POST.get("address")
+    customer.is_active = request.POST.get("is_active") == "true"
+
+    # Atualizar email do usuário
+    customer.user.email = request.POST.get("email", "")
+    customer.user.save()
+
+    # Se forneceu nova senha, atualizar
+    new_password = request.POST.get("password")
+    if new_password:
+        customer.user.set_password(new_password)
+        customer.user.save()
+
+    customer.save()
+    return redirect("dashboard:customer_list")
+
+
+@login_required
+@require_POST
+def customer_toggle_active(request, pk):
+    """Ativar/desativar cliente"""
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
+    customer = get_object_or_404(Customer, pk=pk)
+    customer.is_active = not customer.is_active
+    customer.save()
+    return redirect("dashboard:customer_list")
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def customer_delete(request, pk):
+    """Deletar cliente e usuário associado"""
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
+    customer = get_object_or_404(Customer, pk=pk)
+    user = customer.user
+    customer.delete()
+    user.delete()
+    return redirect("dashboard:customer_list")

@@ -4,28 +4,29 @@
     <div class="container main-header-inner">
         <div class="logo-area">
             {% if global_info.company_logo_url %}
-                <img src="{{ global_info.company_logo_url }}" alt="{{ global_info.company_name }}" class="logo-icon">
+            <img src="{{ global_info.company_logo_url }}" alt="{{ global_info.company_name }}" class="logo-icon">
             {% else %}
-                <img src="{% static 'images/default-logo.svg' %}" alt="{{ global_info.company_name|default:'Logo' }}" class="logo-icon">
+            <img src="{% static 'images/default-logo.svg' %}" alt="{{ global_info.company_name|default:'Logo' }}"
+                class="logo-icon">
             {% endif %}
             <div>
                 <h1 class="mb-0">{{ global_info.company_name }}</h1>
                 <p class="d-block">
                     {% if request.user.is_authenticated %}
-                        Página do Administrador
+                    Página do Administrador
                     {% else %}
-                        {% if global_info.company_address %}
-                            {{ global_info.company_address }}
-                        {% else %}
-                            Sistema de Delivery
-                        {% endif %}
+                    {% if global_info.company_address %}
+                    {{ global_info.company_address }}
+                    {% else %}
+                    Sistema de Delivery
+                    {% endif %}
                     {% endif %}
                 </p>
             </div>
         </div>
         <nav>
             <ul>
-                {% if request.user.is_authenticated %}
+                {% if request.user.is_authenticated and request.user.is_superuser %}
                 <li><a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
                         href="{% url 'dashboard:dashboard' %}">Dashboard</a></li>
                 <li>
@@ -46,11 +47,25 @@
                         <span class="nav-text-full">Pedidos</span>
                     </a>
                 </li>
+                <li>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'customer_list' %}active{% endif %}"
+                        href="{% url 'dashboard:customer_list' %}">
+                        <span class="nav-text-full">Clientes</span>
+                    </a>
+                </li>
                 <li><a class="nav-link {% if request.resolver_match.url_name == 'logout' %}active{% endif %}"
                         href="{% url 'dashboard:logout' %}">Sair</a></li>
                 {% else %}
                 <li><a class="nav-link {% if request.resolver_match.url_name == 'product_list' %}active{% endif %}"
                         href="{% url 'product_list' %}">Produtos</a></li>
+
+                <!-- Links de Login/Logout para Clientes -->
+                {% if request.user.is_authenticated and request.user.customer_profile %}
+                <li><a class="nav-link" href="{% url 'customers:logout' %}">Sair</a></li>
+                {% elif not request.user.is_authenticated %}
+                <li><a class="nav-link" href="{% url 'customers:login' %}">Entrar</a></li>
+                {% endif %}
+
                 <li style="position: relative;">
                     <a class="nav-link {% if request.resolver_match.url_name == 'cart_detail' %}active{% endif %} d-flex align-items-center gap-1 position-relative"
                         href="{% url 'cart_detail' %}">
