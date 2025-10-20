@@ -1,7 +1,6 @@
 services:
   redis:
-    image: redis:7.2.7-alpine
-    container_name: ${REDIS_CONTAINER_NAME:-delivery-redis}
+    image: redis:8.2-alpine
     restart: unless-stopped
     # Sem exposição de porta - apenas comunicação interna entre containers
     expose:
@@ -29,7 +28,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ${CONTAINER_NAME:-delivery-agua-app}
     restart: unless-stopped
     ports:
       - "${HOST_PORT:-8000}:8000"
