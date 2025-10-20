@@ -3,8 +3,9 @@ services:
     image: redis:7.2.7-alpine
     container_name: ${REDIS_CONTAINER_NAME:-delivery-redis}
     restart: unless-stopped
-    ports:
-      - "${REDIS_HOST_PORT:-6379}:6379"
+    # Sem exposição de porta - apenas comunicação interna entre containers
+    expose:
+      - "6379"
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
     volumes:
       - redis_data:/data
