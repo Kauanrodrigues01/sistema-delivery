@@ -148,18 +148,61 @@ poetry run python manage.py runserver
 
 ## 🐳 Executando com Docker
 
-### 1. Suba os containers
+### 📦 Produção (com Redis incluído)
+
+O `docker-compose.yml` já inclui o Redis configurado automaticamente:
 
 ```bash
-docker-compose up --build
-```
+# Subir todos os containers (web + redis)
+docker-compose up -d --build
 
-### 2. Execute migrações no container
-
-```bash
+# Executar migrações
 docker-compose exec web python manage.py migrate
 docker-compose exec web python manage.py createsuperuser
+
+# Ver logs
+docker-compose logs -f
+
+# Parar containers
+docker-compose down
 ```
+
+**Serviços incluídos:**
+- 🌐 **web**: Aplicação Django (porta 8000)
+- 🔴 **redis**: Cache e WebSockets (porta 6379)
+
+### 🛠️ Desenvolvimento (com PostgreSQL + Redis)
+
+Para ambiente de desenvolvimento completo:
+
+```bash
+# Subir PostgreSQL e Redis
+docker-compose -f docker-compose-dev.yml up -d
+
+# Configurar o .env para usar o PostgreSQL
+DATABASE_URL=postgres://delivery_user:delivery_pass123@localhost:5432/delivery_agua_dev
+REDIS_URL=redis://localhost:6379/1
+
+# Executar aplicação localmente
+poetry run python manage.py migrate
+poetry run python manage.py runserver
+```
+
+### ⚙️ Configuração do Redis
+
+O Redis é usado para:
+- ✅ **Cache**: Melhora performance de queries
+- ✅ **WebSockets**: Dashboard em tempo real
+- ✅ **Health Check**: Monitoramento da aplicação
+
+**Variáveis de ambiente (opcional):**
+```env
+REDIS_PASSWORD=redis123           # Senha do Redis
+REDIS_CONTAINER_NAME=delivery-redis
+REDIS_HOST_PORT=6379              # Porta exposta no host
+```
+
+> **Nota**: Em desenvolvimento (DEBUG=True), o sistema usa cache em memória se o Redis não estiver disponível.
 
 ---
 

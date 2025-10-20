@@ -234,29 +234,49 @@ BASE_APPLICATION_URL = config("BASE_APPLICATION_URL", default="http://localhost:
 
 
 # Cache Configuration
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": config("REDIS_URL", default="redis://localhost:6379/1"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "SERIALIZER": "django_redis.serializers.json.JSONSerializer",
-            "COMPRESSOR": "django_redis.compressors.zlib.ZlibCompressor",
-        },
-        "KEY_PREFIX": "delivery_cache",
-        "TIMEOUT": 300,  # 5 min default
+# Usar Redis em produção, memória local em desenvolvimento
+if DEBUG:
+    # Cache simples em memória para desenvolvimento (não precisa de Redis)
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "unique-snowflake",
+            "TIMEOUT": 300,  # 5 min default
+        }
     }
-}
+else:
+    # Redis para produção
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": config("REDIS_URL", default="redis://localhost:6379/1"),
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                "SERIALIZER": "django_redis.serializers.json.JSONSerializer",
+                "COMPRESSOR": "django_redis.compressors.zlib.ZlibCompressor",
+            },
+            "KEY_PREFIX": "delivery_cache",
+            "TIMEOUT": 300,  # 5 min default
+        }
+    }
 
 # Channels Configuration
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [config("REDIS_URL", default="redis://localhost:6379/2")],
+# Usar in-memory em desenvolvimento, Redis em produção
+if DEBUG:
+    # In-memory channel layer para desenvolvimento (não precisa de Redis)
+    CHANNEL_LAYERS = {
+        "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
+    }
+else:
+    # Redis para produção
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [config("REDIS_URL", default="redis://localhost:6379/2")],
+            },
         },
-    },
-}
+    }
 
 # Cache timeouts customizados
 CACHE_TIMEOUTS = {

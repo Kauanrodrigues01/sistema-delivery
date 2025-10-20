@@ -1,4 +1,29 @@
 services:
+  redis:
+    image: redis:7.2.7-alpine
+    container_name: ${REDIS_CONTAINER_NAME:-delivery-redis}
+    restart: unless-stopped
+    ports:
+      - "${REDIS_HOST_PORT:-6379}:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+    networks:
+      - delivery_network
+
   web:
     build:
       context: .
@@ -21,8 +46,8 @@ services:
       - LANGUAGE_CODE=${LANGUAGE_CODE:-pt-br}
       - TIME_ZONE=${TIME_ZONE:-America/Sao_Paulo}
 
-      # Redis
-      - REDIS_URL=${REDIS_URL}
+      # Redis - Usando nome do serviço como hostname
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/1
 
       # Superuser Settings
       - SUPERUSER_USERNAME=${SUPERUSER_USERNAME}
@@ -57,6 +82,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    depends_on:
+      redis:
+        condition: service_healthy
     deploy:
       resources:
         limits:
@@ -67,6 +95,13 @@ services:
           cpus: '0.25'
     volumes:
       - app_logs:/app/logs
+    networks:
+      - delivery_network
+
+networks:
+  delivery_network:
+    driver: bridge
 
 volumes:
+  redis_data:
   app_logs:
