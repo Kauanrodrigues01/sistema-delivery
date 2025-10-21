@@ -43,3 +43,25 @@ class Customer(models.Model):
 
     def __str__(self):
         return f"{self.full_name} - {self.phone}"
+    
+    @property
+    def formated_cpf(self):
+        """Retorna o CPF formatado como XXX.XXX.XXX-XX ou vazio se não houver CPF."""
+        if not self.cpf:
+            return ""
+        cpf_numbers = ''.join(filter(str.isdigit, self.cpf))
+        if len(cpf_numbers) != 11:
+            return self.cpf  # Retorna como está se não tiver 11 dígitos
+        return f"{cpf_numbers[:3]}.{cpf_numbers[3:6]}.{cpf_numbers[6:9]}-{cpf_numbers[9:]}"
+    
+    @property
+    def formated_phone(self):
+        """Retorna o telefone formatado no padrão (XX) XXXXX-XXXX ou vazio se não houver telefone."""
+        if not self.phone:
+            return ""
+        phone_numbers = ''.join(filter(str.isdigit, self.phone))
+        if len(phone_numbers) == 10:
+            return f"({phone_numbers[:2]}) {phone_numbers[2:6]}-{phone_numbers[6:]}"
+        elif len(phone_numbers) == 11:
+            return f"({phone_numbers[:2]}) {phone_numbers[2:7]}-{phone_numbers[7:]}"
+        return self.phone  # Retorna como está se não tiver 10 ou 11 dígitos

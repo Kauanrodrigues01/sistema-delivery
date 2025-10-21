@@ -321,44 +321,133 @@ if not DEBUG:
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "filters": {
+        "skip_websocket_404": {
+            "()": "django.utils.log.CallbackFilter",
+            "callback": lambda record: not (
+                hasattr(record, "status_code")
+                and record.status_code == 404
+                and "/ws/" in getattr(record, "request_path", "")
+            ),
+        },
+        "skip_broken_pipe": {
+            "()": "django.utils.log.CallbackFilter",
+            "callback": lambda record: "Broken pipe" not in record.getMessage(),
+        },
+    },
     "formatters": {
-        "verbose": {
-            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+        "colored_console": {
+            "format": "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(asctime)s%(reset)s %(cyan)s[%(name)s]%(reset)s %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+            "()": "colorlog.ColoredFormatter",
+            "log_colors": {
+                "DEBUG": "cyan",
+                "INFO": "green",
+                "WARNING": "yellow",
+                "ERROR": "red",
+                "CRITICAL": "red,bg_white",
+            },
+        },
+        "detailed": {
+            "format": "[{levelname}] {asctime} | {name}:{lineno} | {funcName}() | {message}",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+            "style": "{",
+        },
+        "simple": {
+            "format": "[{levelname}] {asctime} | {message}",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
             "style": "{",
         },
         "json": {
-            "format": '{"time": "%(asctime)s", "level": "%(levelname)s", "module": "%(module)s", "message": "%(message)s"}',
+            "format": '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "module": "%(module)s", "function": "%(funcName)s", "line": %(lineno)d, "message": "%(message)s"}',
+            "datefmt": "%Y-%m-%d %H:%M:%S",
         },
     },
     "handlers": {
-        "file": {
+        "console": {
+            "level": "DEBUG" if DEBUG else "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "colored_console" if DEBUG else "simple",
+            "filters": ["skip_websocket_404", "skip_broken_pipe"],
+        },
+        "file_app": {
             "level": "INFO",
             "class": "logging.handlers.RotatingFileHandler",
             "filename": BASE_DIR / "logs" / "app.log",
             "maxBytes": 10485760,  # 10MB
             "backupCount": 5,
-            "formatter": "json" if not DEBUG else "verbose",
+            "formatter": "json" if not DEBUG else "detailed",
         },
-        "console": {
-            "level": "DEBUG" if DEBUG else "INFO",
-            "class": "logging.StreamHandler",
-            "formatter": "verbose",
+        "file_errors": {
+            "level": "ERROR",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs" / "errors.log",
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 5,
+            "formatter": "detailed",
+        },
+        "file_db": {
+            "level": "DEBUG" if DEBUG else "WARNING",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs" / "database.log",
+            "maxBytes": 5242880,  # 5MB
+            "backupCount": 3,
+            "formatter": "detailed",
         },
     },
     "loggers": {
+        "": {  # Root logger
+            "handlers": ["console", "file_app", "file_errors"],
+            "level": "DEBUG" if DEBUG else "INFO",
+        },
         "django": {
-            "handlers": ["file", "console"],
+            "handlers": ["console", "file_app"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.server": {
+            "handlers": ["file_app"],
             "level": "INFO",
             "propagate": False,
         },
         "django.db.backends": {
-            "handlers": ["file"],
-            "level": "WARNING" if not DEBUG else "DEBUG",
+            "handlers": ["file_db"],
+            "level": "DEBUG" if DEBUG else "WARNING",
             "propagate": False,
         },
-        "app": {
-            "handlers": ["file", "console"],
-            "level": "DEBUG",
+        "django.request": {
+            "handlers": ["console", "file_errors"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "django.security": {
+            "handlers": ["console", "file_errors"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "products": {
+            "handlers": ["console", "file_app"],
+            "level": "DEBUG" if DEBUG else "INFO",
+            "propagate": False,
+        },
+        "checkout": {
+            "handlers": ["console", "file_app"],
+            "level": "DEBUG" if DEBUG else "INFO",
+            "propagate": False,
+        },
+        "cart": {
+            "handlers": ["console", "file_app"],
+            "level": "DEBUG" if DEBUG else "INFO",
+            "propagate": False,
+        },
+        "dashboard": {
+            "handlers": ["console", "file_app"],
+            "level": "DEBUG" if DEBUG else "INFO",
+            "propagate": False,
+        },
+        "services": {
+            "handlers": ["console", "file_app"],
+            "level": "DEBUG" if DEBUG else "INFO",
             "propagate": False,
         },
     },

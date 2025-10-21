@@ -8,6 +8,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from checkout.models import Order, OrderItem
 from customers.models import Customer
 from products.models import Category, Product
+from utils.normalize import normalize_cpf, normalize_phone
 
 from .utils.metrics import calculate_metrics
 
@@ -564,6 +565,10 @@ def customer_list(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
+    # Pegar mensagens do session
+    error_message = request.session.pop("error_message", None)
+    success_message = request.session.pop("success_message", None)
+
     return render(
         request,
         "dashboard/customer_list.html",
@@ -573,6 +578,8 @@ def customer_list(request):
             "status_filter": status_filter,
             "page_obj": page_obj,
             "is_paginated": page_obj.has_other_pages(),
+            "error_message": error_message,
+            "success_message": success_message,
         },
     )
 
@@ -593,7 +600,9 @@ def customer_create(request):
 
             # Verificar se username já existe
             if User.objects.filter(username=username).exists():
-                # TODO: Retornar erro via mensagem
+                request.session["error_message"] = (
+                    f"O nome de usuário '{username}' já está em uso."
+                )
                 return redirect("dashboard:customer_list")
 
             user = User.objects.create_user(
@@ -604,17 +613,65 @@ def customer_create(request):
                 is_staff=False,
             )
 
+            cpf = request.POST.get("cpf") or None
+            phone = request.POST.get("phone") or None
+
+            normalized_cpf = normalize_cpf(cpf)
+            normalized_phone = normalize_phone(phone)
+
+            if normalized_cpf:
+                if Customer.objects.filter(cpf=normalized_cpf).exists():
+                    request.session["error_message"] = (
+                        f"O CPF '{cpf}' já está cadastrado."
+                    )
+                    return redirect("dashboard:customer_list")
+
             # Criar perfil de cliente
             Customer.objects.create(
                 user=user,
                 full_name=request.POST.get("full_name"),
-                phone=request.POST.get("phone"),
-                cpf=request.POST.get("cpf") or None,
+                phone=normalized_phone,
+                cpf=normalized_cpf,
                 address=request.POST.get("address"),
                 is_active=request.POST.get("is_active") == "true",
             )
+
+            request.session["success_message"] = (
+                f"Cliente '{request.POST.get('full_name')}' criado com sucesso!"
+            )
     except Exception as e:
-        print(f"Erro ao criar cliente: {e}")
+        # Humanizar mensagens de erro do banco de dados
+        error_msg = str(e).lower()
+
+        if "unique constraint" in error_msg or "duplicate" in error_msg:
+            if "username" in error_msg:
+                request.session["error_message"] = (
+                    "Este nome de usuário já está sendo usado por outro cliente."
+                )
+            elif "cpf" in error_msg:
+                request.session["error_message"] = (
+                    "Este CPF já está cadastrado no sistema."
+                )
+            elif "email" in error_msg:
+                request.session["error_message"] = (
+                    "Este e-mail já está cadastrado no sistema."
+                )
+            else:
+                request.session["error_message"] = (
+                    "Já existe um cliente com esses dados cadastrados."
+                )
+        elif "required" in error_msg or "null" in error_msg or "not-null" in error_msg:
+            request.session["error_message"] = (
+                "Por favor, preencha todos os campos obrigatórios."
+            )
+        elif "invalid" in error_msg:
+            request.session["error_message"] = (
+                "Alguns dados fornecidos são inválidos. Verifique e tente novamente."
+            )
+        else:
+            request.session["error_message"] = (
+                "Não foi possível criar o cliente. Tente novamente."
+            )
 
     return redirect("dashboard:customer_list")
 
@@ -626,25 +683,84 @@ def customer_edit(request, pk):
     if not request.user.is_superuser:
         return redirect("product_list")
 
-    customer = get_object_or_404(Customer, pk=pk)
+    try:
+        customer = get_object_or_404(Customer, pk=pk)
 
-    customer.full_name = request.POST.get("full_name")
-    customer.phone = request.POST.get("phone")
-    customer.cpf = request.POST.get("cpf") or None
-    customer.address = request.POST.get("address")
-    customer.is_active = request.POST.get("is_active") == "true"
+        cpf = request.POST.get("cpf") or None
+        phone = request.POST.get("phone") or None
 
-    # Atualizar email do usuário
-    customer.user.email = request.POST.get("email", "")
-    customer.user.save()
+        normalize_cpf = cpf.replace(".", "").replace("-", "").strip() if cpf else None
+        normalize_phone = (
+            phone.replace(".", "")
+            .replace("-", "")
+            .replace("(", "")
+            .replace(")", "")
+            .strip()
+            if phone
+            else None
+        )
 
-    # Se forneceu nova senha, atualizar
-    new_password = request.POST.get("password")
-    if new_password:
-        customer.user.set_password(new_password)
+        # Verificar se CPF já existe em outro cliente
+        if normalize_cpf:
+            existing_cpf = (
+                Customer.objects.filter(cpf=normalize_cpf).exclude(pk=pk).first()
+            )
+            if existing_cpf:
+                request.session["error_message"] = (
+                    f"O CPF '{cpf}' já está cadastrado para outro cliente."
+                )
+                return redirect("dashboard:customer_list")
+
+        customer.full_name = request.POST.get("full_name")
+        customer.phone = normalize_phone
+        customer.cpf = normalize_cpf
+        customer.address = request.POST.get("address")
+        customer.is_active = request.POST.get("is_active") == "true"
+
+        # Atualizar email do usuário
+        customer.user.email = request.POST.get("email", "")
         customer.user.save()
 
-    customer.save()
+        # Se forneceu nova senha, atualizar
+        new_password = request.POST.get("password")
+        if new_password:
+            customer.user.set_password(new_password)
+            customer.user.save()
+
+        customer.save()
+        request.session["success_message"] = (
+            f"Cliente '{customer.full_name}' atualizado com sucesso!"
+        )
+    except Exception as e:
+        # Humanizar mensagens de erro do banco de dados
+        error_msg = str(e).lower()
+
+        if "unique constraint" in error_msg or "duplicate" in error_msg:
+            if "cpf" in error_msg:
+                request.session["error_message"] = (
+                    "Este CPF já está cadastrado para outro cliente."
+                )
+            elif "email" in error_msg:
+                request.session["error_message"] = (
+                    "Este e-mail já está cadastrado para outro cliente."
+                )
+            else:
+                request.session["error_message"] = (
+                    "Já existe outro cliente com esses dados."
+                )
+        elif "required" in error_msg or "null" in error_msg or "not-null" in error_msg:
+            request.session["error_message"] = (
+                "Por favor, preencha todos os campos obrigatórios."
+            )
+        elif "invalid" in error_msg:
+            request.session["error_message"] = (
+                "Alguns dados fornecidos são inválidos. Verifique e tente novamente."
+            )
+        else:
+            request.session["error_message"] = (
+                "Não foi possível atualizar o cliente. Tente novamente."
+            )
+
     return redirect("dashboard:customer_list")
 
 
@@ -655,9 +771,20 @@ def customer_toggle_active(request, pk):
     if not request.user.is_superuser:
         return redirect("product_list")
 
-    customer = get_object_or_404(Customer, pk=pk)
-    customer.is_active = not customer.is_active
-    customer.save()
+    try:
+        customer = get_object_or_404(Customer, pk=pk)
+        customer.is_active = not customer.is_active
+        customer.save()
+        status = "ativado" if customer.is_active else "desativado"
+        request.session["success_message"] = (
+            f"Cliente '{customer.full_name}' foi {status} com sucesso!"
+        )
+    except Exception:
+        status_pretendido = "ativar" if not customer.is_active else "desativar"
+        request.session["error_message"] = (
+            f"Não foi possível {status_pretendido} o cliente. Tente novamente."
+        )
+
     return redirect("dashboard:customer_list")
 
 
@@ -668,8 +795,18 @@ def customer_delete(request, pk):
     if not request.user.is_superuser:
         return redirect("product_list")
 
-    customer = get_object_or_404(Customer, pk=pk)
-    user = customer.user
-    customer.delete()
-    user.delete()
+    try:
+        customer = get_object_or_404(Customer, pk=pk)
+        customer_name = customer.full_name
+        user = customer.user
+        customer.delete()
+        user.delete()
+        request.session["success_message"] = (
+            f"Cliente '{customer_name}' foi excluído com sucesso!"
+        )
+    except Exception:
+        request.session["error_message"] = (
+            "Não foi possível excluir o cliente. Tente novamente."
+        )
+
     return redirect("dashboard:customer_list")

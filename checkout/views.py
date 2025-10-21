@@ -1,3 +1,5 @@
+from logging import getLogger
+
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
@@ -10,6 +12,8 @@ from services.notifications import (
 )
 
 from .models import Order, OrderItem
+
+logger = getLogger(__name__)
 
 
 class CheckoutView(TemplateView):
@@ -114,8 +118,8 @@ class CheckoutView(TemplateView):
             try:
                 send_order_notifications_with_callmebot(order)
             except Exception as e:
-                print(f"Erro ao enviar notificação de novo pedido: {e}")
-                # Não interrompe o fluxo se a notificação falhar
+                logger.error(f"Erro ao enviar notificação de novo pedido: {e}")
+                return render(request, "checkout/error.html", context)
 
             # Se o pagamento for PIX, cria o pagamento e redireciona
             if payment_method == "pix":
@@ -135,7 +139,7 @@ class CheckoutView(TemplateView):
                     return redirect("checkout:awaiting_payment", order_id=order.id)
                 except Exception as e:
                     order.delete()
-                    print(f"Erro ao criar pagamento PIX: {e}")
+                    logger.error(f"Erro ao criar pagamento PIX: {e}")
                     context["error_message"] = (
                         "Erro ao processar pagamento PIX. Tente novamente."
                     )
@@ -154,7 +158,7 @@ class CheckoutView(TemplateView):
                     return redirect("checkout:awaiting_payment", order_id=order.id)
                 except Exception as e:
                     order.delete()
-                    print(f"Erro ao criar pagamento com cartão: {e}")
+                    logger.error(f"Erro ao criar pagamento com cartão: {e}")
                     context["error_message"] = (
                         "Erro ao processar pagamento com cartão. Tente novamente."
                     )
@@ -167,7 +171,7 @@ class CheckoutView(TemplateView):
                     return render(request, "checkout/success.html", context)
                 except Exception as e:
                     order.delete()
-                    print(f"Erro ao processar pagamento em dinheiro: {e}")
+                    logger.error(f"Erro ao processar pagamento em dinheiro: {e}")
                     context["error_message"] = (
                         "Erro ao finalizar pedido. Tente novamente."
                     )
@@ -179,7 +183,7 @@ class CheckoutView(TemplateView):
             return render(request, "checkout/success.html", context)
 
         except Exception as e:
-            print(f"Error processing order: {e}")
+            logger.error(f"Error processing order: {e}")
             return render(request, "checkout/error.html", context)
 
 
@@ -289,7 +293,7 @@ def check_payment_status(request, order_id):
             )
 
         except Exception as e:
-            print(f"Erro ao verificar status do pagamento: {e}")
+            logger.error(f"Erro ao verificar status do pagamento: {e}")
             return JsonResponse({"status": "error", "message": str(e)})
 
     return JsonResponse({"status": "error", "message": "Método não permitido"})

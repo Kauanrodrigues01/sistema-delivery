@@ -285,6 +285,21 @@
       </p>
     </section>
 
+    <!-- Messages Section -->
+    {% if error_message %}
+    <div class="alert alert-error" id="errorAlert"
+      style="margin-bottom: 1.5rem; padding: 1rem; background-color: #fee; border: 1px solid #fcc; border-radius: var(--radius); color: #c33; transition: opacity 0.5s ease-out, transform 0.5s ease-out;">
+      <strong>❌ Erro:</strong> {{ error_message }}
+    </div>
+    {% endif %}
+
+    {% if success_message %}
+    <div class="alert alert-success" id="successAlert"
+      style="margin-bottom: 1.5rem; padding: 1rem; background-color: #efe; border: 1px solid #cfc; border-radius: var(--radius); color: #383; transition: opacity 0.5s ease-out, transform 0.5s ease-out;">
+      <strong>✅ Sucesso:</strong> {{ success_message }}
+    </div>
+    {% endif %}
+
     <!-- Filters Section -->
     <section class="products-filters">
       <p>Use os filtros abaixo para buscar clientes específicos:</p>
@@ -321,11 +336,14 @@
         </thead>
         <tbody>
           {% for customer in customers %}
-          <tr data-id="{{ customer.id }}">
+          <tr data-id="{{ customer.id }}" data-full-name="{{ customer.full_name }}"
+            data-username="{{ customer.user.username }}" data-email="{{ customer.user.email }}"
+            data-phone="{{ customer.phone }}" data-cpf="{{ customer.cpf|default:'' }}"
+            data-address="{{ customer.address }}" data-is-active="{{ customer.is_active|yesno:'true,false' }}">
             <td>{{ customer.full_name }}</td>
             <td>{{ customer.user.username }}</td>
-            <td>{{ customer.phone }}</td>
-            <td>{{ customer.cpf|default:"Não informado" }}</td>
+            <td>{{ customer.formated_phone }}</td>
+            <td>{{ customer.formated_cpf|default:"Não informado" }}</td>
             <td>
               <span class="status-badge {% if customer.is_active %}status-active{% else %}status-inactive{% endif %}">
                 {% if customer.is_active %}Ativo{% else %}Inativo{% endif %}
@@ -425,6 +443,27 @@
 </div>
 
 <script>
+  // Auto-hide alerts após 5 segundos
+  document.addEventListener('DOMContentLoaded', function () {
+    const errorAlert = document.getElementById('errorAlert');
+    const successAlert = document.getElementById('successAlert');
+
+    function fadeOutAlert(alert) {
+      if (alert) {
+        setTimeout(() => {
+          alert.style.opacity = '0';
+          alert.style.transform = 'translateY(-20px)';
+          setTimeout(() => {
+            alert.remove();
+          }, 500);
+        }, 5000);
+      }
+    }
+
+    fadeOutAlert(errorAlert);
+    fadeOutAlert(successAlert);
+  });
+
   let editingCustomerId = null;
 
   // Função genérica para abrir e fechar modais (seguindo padrão do product_list)
@@ -463,23 +502,21 @@
   // Edit customer
   function editCustomer(customerId) {
     const row = document.querySelector(`tr[data-id="${customerId}"]`);
-    const cells = row.querySelectorAll('td');
 
     editingCustomerId = customerId;
 
-    // Preencher formulário
-    document.getElementById('full_name').value = cells[0].textContent;
-    document.getElementById('username').value = cells[1].textContent;
+    // Preencher formulário com todos os dados do dataset
+    document.getElementById('full_name').value = row.dataset.fullName;
+    document.getElementById('username').value = row.dataset.username;
     document.getElementById('username').disabled = true; // Não permitir alterar username
-    document.getElementById('phone').value = cells[2].textContent;
-
-    const cpfText = cells[3].textContent.trim();
-    document.getElementById('cpf').value = cpfText !== 'Não informado' ? cpfText : '';
-
-    const isActive = cells[4].querySelector('.status-active') !== null;
-    document.getElementById('is_active').checked = isActive;
+    document.getElementById('email').value = row.dataset.email;
+    document.getElementById('phone').value = row.dataset.phone;
+    document.getElementById('cpf').value = row.dataset.cpf;
+    document.getElementById('address').value = row.dataset.address;
+    document.getElementById('is_active').checked = row.dataset.isActive === 'true';
 
     // Senha opcional na edição
+    document.getElementById('password').value = '';
     document.getElementById('password').required = false;
     document.getElementById('passwordHelp').textContent = 'Deixe em branco para manter a senha atual';
 
