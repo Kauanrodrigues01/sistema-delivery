@@ -46,7 +46,7 @@ def send_order_update(order, event_type):
             "orders_updates", {"type": event_type, "data": order_data}
         )
 
-    except Exception as e:
+    except Exception:
         # Falhas do WebSocket não devem impedir operações normais
         pass
 
@@ -63,7 +63,7 @@ def order_saved(sender, instance, created, **kwargs):
         else:
             # Pedido atualizado
             send_order_update(instance, "order_update")
-    except Exception as e:
+    except Exception:
         # Não pode falhar o signal - isso impediria o save do webhook
         pass
 
@@ -75,12 +75,21 @@ def order_item_saved(sender, instance, created, **kwargs):
     """
     try:
         if created:
-            # Novo item adicionado ao pedido
-            send_order_update(instance.order, "order_item_added")
+            # Verificar se o pedido foi criado há menos de 2 segundos
+            # Se sim, não enviar notificação de item adicionado (já foi enviada a de novo pedido)
+            from django.utils import timezone
+
+            time_diff = (timezone.now() - instance.order.created_at).total_seconds()
+
+            # Se o pedido tem mais de 2 segundos, significa que o item foi adicionado depois
+            if time_diff > 2:
+                # Novo item adicionado ao pedido existente
+                send_order_update(instance.order, "order_item_added")
+            # Se o pedido é novo (< 2 segundos), não enviar nada pois já foi enviado "new_order"
         else:
             # Item existente atualizado
             send_order_update(instance.order, "order_update")
-    except Exception as e:
+    except Exception:
         # Não pode falhar o signal
         pass
 
@@ -93,6 +102,6 @@ def order_item_deleted(sender, instance, **kwargs):
     try:
         # Item removido do pedido
         send_order_update(instance.order, "order_item_removed")
-    except Exception as e:
+    except Exception:
         # Não pode falhar o signal
         pass
