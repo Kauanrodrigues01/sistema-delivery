@@ -1,15 +1,30 @@
+import logging
+
 from django.conf import settings
 
-from cart.views import get_cart
+logger = logging.getLogger(__name__)
 
 
 def global_context(request):
     """
     Context processor that adds global company information to all templates
     """
-    # Get cart for the current session
-    cart = get_cart(request)
-    cart_count = cart.total_quantity if cart else 0
+    # Get cart count for the current session (lazy import to avoid circular dependency issues)
+    cart_count = 0
+    try:
+        # Only import and query if apps are ready
+        from django.apps import apps
+
+        if apps.ready:
+            
+            from cart.views import get_cart
+
+            cart = get_cart(request)
+            cart_count = cart.total_quantity if cart else 0
+    except Exception as e:
+        logger.error(f"Error getting cart count: {e}")
+        # If any error occurs (apps not ready, etc), default to 0
+        cart_count = 0
 
     return {
         "global_info": {
