@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from django.core.management.base import BaseCommand, CommandError
 
-from products.models import Product, Category
+from products.models import Category, Product
 
 
 class Command(BaseCommand):

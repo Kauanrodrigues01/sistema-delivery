@@ -4,7 +4,6 @@ from .views import (
     AddToCartView,
     CartDetailView,
     decrease_cart_item,
-    get_status_debug,
     increase_cart_item,
     remove_cart_item,
 )
@@ -15,5 +14,4 @@ urlpatterns = [
     path("increase/", increase_cart_item, name="increase_cart_item"),
     path("decrease/", decrease_cart_item, name="decrease_cart_item"),
     path("remove/", remove_cart_item, name="remove_cart_item"),
-    path("status/", get_status_debug, name="cart_status_debug"),
 ]

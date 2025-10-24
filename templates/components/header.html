@@ -58,6 +58,8 @@
                 {% else %}
                 <li><a class="nav-link {% if request.resolver_match.url_name == 'product_list' %}active{% endif %}"
                         href="{% url 'product_list' %}">Produtos</a></li>
+                <li><a class="nav-link {% if request.resolver_match.namespace == 'orders' %}active{% endif %}"
+                        href="{% url 'orders:order_list' %}">Meus Pedidos</a></li>
 
                 <!-- Links de Login/Logout para Clientes -->
                 {% if request.user.is_authenticated and request.user.customer_profile %}

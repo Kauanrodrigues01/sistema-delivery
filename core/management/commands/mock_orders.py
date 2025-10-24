@@ -15,7 +15,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from checkout.models import Order, OrderItem
+from orders.models import Order, OrderItem
 from products.models import Product
 
 

@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models import F, Sum
 from django.utils import timezone
 
+from core.models import ClientSession
 from products.models import Product
 
 
@@ -156,6 +157,13 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default="pending", db_index=True
+    )
+    client_session = models.ForeignKey(
+        ClientSession,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="orders",
     )
 
     objects = OrderQuerySet.as_manager()

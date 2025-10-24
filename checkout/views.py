@@ -6,12 +6,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 
 from cart.views import get_cart
+from orders.models import Order, OrderItem
 from services.mercadopago import MercadoPagoService
 from services.notifications import (
     send_order_notifications_with_callmebot,
 )
-
-from .models import Order, OrderItem
 
 logger = getLogger(__name__)
 
@@ -25,7 +24,6 @@ class CheckoutView(TemplateView):
         cart_items = cart.items.select_related("product").all()
         context["cart_items"] = cart_items
         context["cart_total"] = cart.total_price
-        context["cart_count"] = cart.total_quantity
 
         # Adicionar dados do cliente se logado
         if self.request.user.is_authenticated and hasattr(
@@ -89,7 +87,12 @@ class CheckoutView(TemplateView):
                 return render(request, "checkout/error.html", context)
 
         try:
-            # Cria o pedido
+            # Pega ou cria ClientSession
+            from utils.session import get_or_create_client_session
+
+            client_session = get_or_create_client_session(self.request)
+
+            # Cria o pedido vinculado à ClientSession
             order = Order.objects.create(
                 customer_name=name,
                 phone=phone,
@@ -98,6 +101,7 @@ class CheckoutView(TemplateView):
                 payment_method=payment_method,
                 cash_value=cash_value if payment_method == "dinheiro" else None,
                 payment_status="pending",
+                client_session=client_session,
                 customer=(
                     self.request.user.customer_profile
                     if (

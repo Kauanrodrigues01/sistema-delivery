@@ -13,8 +13,8 @@ from decimal import Decimal
 from django.db import transaction
 from django.utils import timezone
 
-from checkout.models import Order, OrderItem
 from dashboard.utils.metrics import calculate_metrics
+from orders.models import Order, OrderItem
 from products.models import Product
 
 

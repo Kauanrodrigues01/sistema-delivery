@@ -5,8 +5,8 @@ from django.db import models, transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods, require_POST
 
-from checkout.models import Order, OrderItem
 from customers.models import Customer
+from orders.models import Order, OrderItem
 from products.models import Category, Product
 from utils.normalize import normalize_cpf, normalize_phone
 

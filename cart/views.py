@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
@@ -7,10 +6,6 @@ from django.views.generic import TemplateView, View
 from products.models import Product
 
 from .models import Cart, CartItem
-
-
-def get_status_debug(request):
-    return JsonResponse({"debug": settings.DEBUG})
 
 
 # AJAX: aumentar quantidade
@@ -90,12 +85,22 @@ def remove_cart_item(request):
 
 
 def get_cart(request):
-    cart_id = request.session.get("cart_id")
-    if cart_id:
-        cart, created = Cart.objects.get_or_create(id=cart_id)
-    else:
-        cart = Cart.objects.create()
-        request.session["cart_id"] = cart.id
+    """
+    Pega ou cria um carrinho vinculado à ClientSession.
+    Mantém compatibilidade com cart_id na sessão Django.
+    """
+    from utils.session import get_or_create_client_session
+
+    # Obter ou criar ClientSession
+    client_session = get_or_create_client_session(request)
+
+    # Tentar pegar carrinho pela ClientSession
+    try:
+        cart = Cart.objects.get(client_session=client_session)
+    except Cart.DoesNotExist:
+        # Se não existe, criar novo carrinho vinculado à sessão
+        cart = Cart.objects.create(client_session=client_session)
+
     return cart
 
 
@@ -122,6 +127,5 @@ class CartDetailView(TemplateView):
         total = cart.total_price
         context["cart"] = cart
         context["cart_items"] = cart_items
-        context["cart_count"] = cart.total_quantity
         context["cart_total"] = total
         return context

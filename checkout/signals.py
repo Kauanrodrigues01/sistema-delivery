@@ -3,7 +3,7 @@ from channels.layers import get_channel_layer
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from .models import Order, OrderItem
+from orders.models import Order, OrderItem
 
 
 def send_order_update(order, event_type):

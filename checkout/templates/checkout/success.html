@@ -19,8 +19,10 @@
 
             <p style="color: var(--muted-foreground); font-size:1.1rem; margin-bottom:2rem;">Seu pedido foi recebido e
                 está sendo processado. Em breve entraremos em contato para confirmar a entrega.</p>
-            <a href="{% url 'product_list' %}" class="btn btn-primary w-100"
-                style="max-width:300px; margin:0 auto;">Voltar para a loja</a>
+            <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 300px; margin: 0 auto;">
+                <a href="{% url 'orders:order_list' %}" class="btn btn-primary w-100">Ver Meus Pedidos</a>
+                <a href="{% url 'product_list' %}" class="btn btn-secondary w-100">Voltar para a loja</a>
+            </div>
         </section>
     </div>
 </main>

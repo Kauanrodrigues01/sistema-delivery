@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.utils.timezone import now
 
-from checkout.models import Order
+from orders.models import Order
 from products.models import Product
 
 

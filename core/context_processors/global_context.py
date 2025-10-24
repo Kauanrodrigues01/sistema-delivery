@@ -1,11 +1,16 @@
-# core/context_processors.py
 from django.conf import settings
+
+from cart.views import get_cart
 
 
 def global_context(request):
     """
     Context processor that adds global company information to all templates
     """
+    # Get cart for the current session
+    cart = get_cart(request)
+    cart_count = cart.total_quantity if cart else 0
+
     return {
         "global_info": {
             "company_name": settings.COMPANY_NAME,
@@ -14,5 +19,6 @@ def global_context(request):
             "company_logo_url": settings.COMPANY_LOGO_URL,
             "header_color_start": settings.HEADER_COLOR_START,
             "header_color_end": settings.HEADER_COLOR_END,
-        }
+        },
+        "cart_count": cart_count,
     }

@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load compress %}
+
+{% block title %}Pedido #{{ order.id }}{% endblock %}
+
+{% block head %}
+{% compress css %}
+<link rel="stylesheet" href="{% static 'orders/styles.css' %}">
+<link rel="stylesheet" href="{% static 'global/buttons-default-style.css' %}">
+{% endcompress %}
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+  <div class="container order-detail-container">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <h2>Detalhes do Pedido</h2>
+      <p>Informações completas sobre o seu pedido</p>
+    </section>
+
+    <!-- Integration Warning -->
+    {% if order.payment_integration_failed %}
+    <div class="alert alert-warning">
+      <strong>⚠️ Atenção - Pagamento Manual:</strong>
+      <p style="margin-top: 0.5rem; margin-bottom: 0;">
+        A integração de pagamento apresentou problemas durante o processamento.
+        {% if order.payment_method == 'pix' %}
+        O pagamento via PIX será processado manualmente. Nossa equipe entrará em contato para informar os dados de
+        pagamento.
+        {% elif order.payment_method == 'cartao_presencial' %}
+        O pagamento com cartão será realizado no momento da entrega.
+        {% endif %}
+      </p>
+    </div>
+    {% endif %}
+
+    <!-- Order Information -->
+    <div class="order-detail-card">
+      <div class="order-detail-header">
+        <div class="order-detail-title">Pedido #{{ order.id }}</div>
+        <div class="order-card-date">{{ order.created_at|date:"d/m/Y H:i" }}</div>
+      </div>
+
+      <!-- Order Status Section -->
+      <div class="order-detail-section">
+        <h3 class="section-title">Status</h3>
+        <div class="detail-row">
+          <span class="detail-label">Status do Pedido:</span>
+          <span class="status-badge 
+                        {% if order.status == 'pending' %}status-pending
+                        {% elif order.status == 'completed' %}status-completed
+                        {% else %}status-cancelled
+                        {% endif %}">
+            {% if order.status == 'pending' %}
+            Pendente
+            {% elif order.status == 'completed' %}
+            Concluído
+            {% elif order.status == 'cancelled' %}
+            Cancelado
+            {% endif %}
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Status do Pagamento:</span>
+          <span class="status-badge 
+                        {% if order.payment_status == 'pending' %}payment-pending
+                        {% elif order.payment_status == 'paid' %}payment-paid
+                        {% else %}payment-cancelled
+                        {% endif %}">
+            {% if order.payment_status == 'pending' %}
+            Pendente
+            {% elif order.payment_status == 'paid' %}
+            Pago
+            {% else %}
+            Cancelado
+            {% endif %}
+          </span>
+        </div>
+      </div>
+
+      <!-- Customer Information -->
+      <div class="order-detail-section">
+        <h3 class="section-title">Informações do Cliente</h3>
+        <div class="detail-row">
+          <span class="detail-label">Nome:</span>
+          <span class="detail-value">{{ order.customer_name }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Telefone:</span>
+          <span class="detail-value">{{ order.phone }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Endereço:</span>
+          <span class="detail-value">{{ order.address }}</span>
+        </div>
+        {% if order.address_number %}
+        <div class="detail-row">
+          <span class="detail-label">Número:</span>
+          <span class="detail-value">{{ order.address_number }}</span>
+        </div>
+        {% endif %}
+        {% if order.address_complement %}
+        <div class="detail-row">
+          <span class="detail-label">Complemento:</span>
+          <span class="detail-value">{{ order.address_complement }}</span>
+        </div>
+        {% endif %}
+        <div class="detail-row">
+          <span class="detail-label">Bairro:</span>
+          <span class="detail-value">{{ order.neighborhood }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Cidade:</span>
+          <span class="detail-value">{{ order.city }}</span>
+        </div>
+      </div>
+
+      <!-- Payment Information -->
+      <div class="order-detail-section">
+        <h3 class="section-title">Informações de Pagamento</h3>
+        <div class="detail-row">
+          <span class="detail-label">Método de Pagamento:</span>
+          <span class="detail-value">
+            {% if order.payment_method == 'pix' %}
+            PIX
+            {% elif order.payment_method == 'dinheiro' %}
+            Dinheiro
+            {% elif order.payment_method == 'cartao_online' %}
+            Cartão (Online)
+            {% elif order.payment_method == 'cartao_presencial' %}
+            Cartão (Presencial)
+            {% endif %}
+          </span>
+        </div>
+        {% if order.change_for %}
+        <div class="detail-row">
+          <span class="detail-label">Troco para:</span>
+          <span class="detail-value">R$ {{ order.change_for|floatformat:2 }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Order Items -->
+      <div class="order-detail-section">
+        <h3 class="section-title">Itens do Pedido</h3>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th class="item-quantity">Quantidade</th>
+              <th class="item-price">Preço Unit.</th>
+              <th class="item-price">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order.items.all %}
+            <tr>
+              <td class="item-name">{{ item.product.name }}</td>
+              <td class="item-quantity">{{ item.quantity }}</td>
+              <td class="item-price">R$ {{ item.price|floatformat:2 }}</td>
+              <td class="item-price">R$ {{ item.subtotal|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div class="order-total-row">
+          <span class="order-total-label">Total:</span>
+          <span class="order-total-value">R$ {{ order.total_price|floatformat:2 }}</span>
+        </div>
+      </div>
+
+      {% if order.notes %}
+      <!-- Order Notes -->
+      <div class="order-detail-section">
+        <h3 class="section-title">Observações</h3>
+        <p style="color: var(--foreground); line-height: 1.6;">{{ order.notes }}</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Back Button -->
+    <div style="text-align: center; margin-top: 2rem;">
+      <a href="{% url 'orders:order_list' %}" class="btn btn-secondary"
+        style="display: inline-block; padding: 0.75rem 2rem;">
+        Voltar para Meus Pedidos
+      </a>
+    </div>
+  </div>
+</main>
+<script>
+  // Initialize Lucide icons
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+</script>
+{% endblock %}

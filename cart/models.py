@@ -1,11 +1,19 @@
 from django.db import models
 from django.db.models import F, Sum
 
+from core.models import ClientSession
 from products.models import Product
 
 
 class Cart(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
+    client_session = models.OneToOneField(
+        ClientSession,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="cart",
+    )
 
     class Meta:
         verbose_name = "Carrinho"
@@ -14,7 +22,12 @@ class Cart(models.Model):
     @property
     def total_quantity(self):
         """Return the total quantity of items in the cart (only active products)"""
-        return self.items.filter(product__is_active=True).aggregate(total=Sum("quantity"))["total"] or 0
+        return (
+            self.items.filter(product__is_active=True).aggregate(total=Sum("quantity"))[
+                "total"
+            ]
+            or 0
+        )
 
     @property
     def unique_items_count(self):
@@ -25,9 +38,9 @@ class Cart(models.Model):
     def total_price(self):
         """Return the total price of all items in the cart (only active products)"""
         return (
-            self.items.filter(product__is_active=True).aggregate(total=Sum(F("quantity") * F("product__price")))[
-                "total"
-            ]
+            self.items.filter(product__is_active=True).aggregate(
+                total=Sum(F("quantity") * F("product__price"))
+            )["total"]
             or 0
         )
 

@@ -54,8 +54,6 @@ class ProductListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        cart = get_cart(self.request)
-        context["cart_count"] = cart.total_quantity if cart else 0
         context["search_query"] = self.request.GET.get("search", "")
         context["category_filter"] = self.request.GET.get("category", "")
         context["categories"] = Category.objects.all().order_by("name")

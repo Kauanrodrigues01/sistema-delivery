@@ -3,7 +3,7 @@ import json
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from checkout.models import Order
+from orders.models import Order
 from services.mercadopago import MercadoPagoService
 from services.notifications import send_payment_update_notification_with_callmebot
 
