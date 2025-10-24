@@ -138,14 +138,23 @@ class CheckoutView(TemplateView):
                     cart.items.all().delete()
                     return redirect("checkout:awaiting_payment", order_id=order.id)
                 except Exception as e:
-                    order.delete()
-                    logger.error(f"Erro ao criar pagamento PIX: {e}")
-                    context["error_message"] = (
-                        "Erro ao processar pagamento PIX. Tente novamente."
+                    # Se falhar integração com MercadoPago, continua com pagamento manual
+                    logger.error(
+                        f"Erro ao criar pagamento PIX (fallback para manual): {e}"
                     )
-                    return render(request, "checkout/error.html", context)
 
-            if payment_method == "cartao":
+                    # Atualiza contexto para informar que será pagamento manual
+                    context["payment_fallback"] = True
+                    context["fallback_message"] = (
+                        "Não foi possível gerar o QR Code PIX automaticamente. "
+                        "Entre em contato conosco para receber os dados de pagamento."
+                    )
+
+                    # Limpa o carrinho e mostra página de sucesso com aviso
+                    cart.items.all().delete()
+                    return render(request, "checkout/success.html", context)
+
+            if payment_method == "cartao_online":
                 try:
                     preference_data = create_payment_charge(order)
                     # Salva a URL de pagamento no pedido, pagamento por preferência não gera ID de pagamento imediato, só depois do pagamento no webhook
@@ -157,10 +166,39 @@ class CheckoutView(TemplateView):
                     cart.items.all().delete()
                     return redirect("checkout:awaiting_payment", order_id=order.id)
                 except Exception as e:
+                    # Se falhar integração com MercadoPago, converte para pagamento presencial
+                    logger.error(
+                        f"Erro ao criar pagamento com cartão online (fallback para presencial): {e}"
+                    )
+
+                    # Converte para cartão presencial
+                    order.payment_method = "cartao_presencial"
+                    order.save()
+
+                    # Atualiza contexto para informar que será pagamento presencial
+                    context["payment_fallback"] = True
+                    context["fallback_message"] = (
+                        "Não foi possível processar o pagamento online. "
+                        "O pagamento será realizado presencialmente na entrega."
+                    )
+
+                    # Limpa o carrinho e mostra página de sucesso com aviso
+                    cart.items.all().delete()
+                    return render(request, "checkout/success.html", context)
+
+            if payment_method == "cartao_presencial":
+                try:
+                    # Pagamento presencial não precisa de processamento online
+                    # Limpa o carrinho e redireciona para sucesso
+                    cart.items.all().delete()
+                    return render(request, "checkout/success.html", context)
+                except Exception as e:
                     order.delete()
-                    logger.error(f"Erro ao criar pagamento com cartão: {e}")
+                    logger.error(
+                        f"Erro ao processar pagamento com cartão presencial: {e}"
+                    )
                     context["error_message"] = (
-                        "Erro ao processar pagamento com cartão. Tente novamente."
+                        "Erro ao finalizar pedido. Tente novamente."
                     )
                     return render(request, "checkout/error.html", context)
 
@@ -203,7 +241,7 @@ def create_payment_charge(order: Order) -> dict:
         )
         return payment_data
 
-    elif order.payment_method == "cartao":
+    elif order.payment_method == "cartao_online":
         # Criar lista de itens para a preferência
         items = []
         for item in order.items.all():
@@ -329,7 +367,7 @@ class ErrorPaymentView(TemplateView):
             try:
                 order = get_object_or_404(Order, id=order_id)
                 context["order"] = order
-            except:
+            except Exception:
                 pass
 
         # Pega a mensagem de erro da URL se existir

@@ -264,7 +264,14 @@ class Command(BaseCommand):
                             address=customer["address"],
                             status=selected_status,
                             payment_status=selected_payment_status,
-                            payment_method=random.choice(["pix", "dinheiro", "cartao"]),
+                            payment_method=random.choice(
+                                [
+                                    "pix",
+                                    "dinheiro",
+                                    "cartao_online",
+                                    "cartao_presencial",
+                                ]
+                            ),
                             created_at=order_date,
                         )
 
@@ -412,7 +419,14 @@ class Command(BaseCommand):
                             address=customer["address"],
                             status="completed",
                             payment_status="paid",
-                            payment_method=random.choice(["pix", "dinheiro", "cartao"]),
+                            payment_method=random.choice(
+                                [
+                                    "pix",
+                                    "dinheiro",
+                                    "cartao_online",
+                                    "cartao_presencial",
+                                ]
+                            ),
                             created_at=today_start
                             + timedelta(
                                 hours=selected_hour,
@@ -450,7 +464,14 @@ class Command(BaseCommand):
                             address=customer["address"],
                             status="pending",
                             payment_status="pending",
-                            payment_method=random.choice(["pix", "dinheiro", "cartao"]),
+                            payment_method=random.choice(
+                                [
+                                    "pix",
+                                    "dinheiro",
+                                    "cartao_online",
+                                    "cartao_presencial",
+                                ]
+                            ),
                             created_at=today_start
                             + timedelta(
                                 hours=selected_hour,
@@ -523,7 +544,7 @@ class Command(BaseCommand):
                             address=customer["address"],
                             status="cancelled",
                             payment_status="cancelled",
-                            payment_method=random.choice(["pix", "cartao"]),
+                            payment_method=random.choice(["pix", "cartao_online"]),
                             created_at=today_start
                             + timedelta(
                                 hours=selected_hour,
@@ -591,7 +612,12 @@ class Command(BaseCommand):
                                 status=status,
                                 payment_status=payment_status,
                                 payment_method=random.choice(
-                                    ["pix", "dinheiro", "cartao"]
+                                    [
+                                        "pix",
+                                        "dinheiro",
+                                        "cartao_online",
+                                        "cartao_presencial",
+                                    ]
                                 ),
                                 created_at=target_date
                                 + timedelta(
@@ -635,7 +661,12 @@ class Command(BaseCommand):
                                 status="completed",
                                 payment_status="paid",
                                 payment_method=random.choice(
-                                    ["pix", "dinheiro", "cartao"]
+                                    [
+                                        "pix",
+                                        "dinheiro",
+                                        "cartao_online",
+                                        "cartao_presencial",
+                                    ]
                                 ),
                                 created_at=target_date
                                 + timedelta(
@@ -689,7 +720,12 @@ class Command(BaseCommand):
                                 status="completed",
                                 payment_status="paid",
                                 payment_method=random.choice(
-                                    ["pix", "dinheiro", "cartao"]
+                                    [
+                                        "pix",
+                                        "dinheiro",
+                                        "cartao_online",
+                                        "cartao_presencial",
+                                    ]
                                 ),
                                 created_at=target_date
                                 + timedelta(

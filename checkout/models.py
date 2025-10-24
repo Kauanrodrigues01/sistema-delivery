@@ -104,7 +104,8 @@ class Order(models.Model):
     PAYMENT_CHOICES = [
         ("pix", "PIX"),
         ("dinheiro", "Dinheiro"),
-        ("cartao", "Cartão"),
+        ("cartao_online", "Cartão (Online)"),
+        ("cartao_presencial", "Cartão (Presencial)"),
     ]
     PAYMENT_STATUS_CHOICES = [
         ("pending", "Pendente"),

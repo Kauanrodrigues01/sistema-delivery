@@ -8,6 +8,15 @@
                 <i data-lucide="check-circle"></i>
             </div>
             <h2 style="color: var(--foreground); font-size:2rem; margin-bottom:1rem;">Pedido realizado com sucesso!</h2>
+
+            {% if payment_fallback %}
+            <div class="alert alert-warning"
+                style="margin-bottom: 1.5rem; padding: 1rem; background-color: #fffbeb; border: 1px solid #fbbf24; border-radius: var(--radius); color: #92400e; text-align: left;">
+                <strong>⚠️ Atenção - Pagamento Manual:</strong>
+                <p style="margin-top: 0.5rem; margin-bottom: 0;">{{ fallback_message }}</p>
+            </div>
+            {% endif %}
+
             <p style="color: var(--muted-foreground); font-size:1.1rem; margin-bottom:2rem;">Seu pedido foi recebido e
                 está sendo processado. Em breve entraremos em contato para confirmar a entrega.</p>
             <a href="{% url 'product_list' %}" class="btn btn-primary w-100"
