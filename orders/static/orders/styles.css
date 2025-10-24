@@ -177,12 +177,36 @@
     text-decoration: none;
     display: block;
     font-weight: 600;
+    font-size: 1rem;
+    line-height: 1.5;
     transition: background-color 0.2s;
 }
 
 .view-order-btn:hover {
     background-color: var(--primary-dark);
     color: white;
+}
+
+.cancel-order-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--destructive);
+    color: white;
+    text-align: center;
+    border-radius: var(--radius);
+    text-decoration: none;
+    display: block;
+    font-weight: 600;
+    font-size: 1rem;
+    line-height: 1.5;
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.cancel-order-btn:hover {
+    opacity: 0.85;
 }
 
 /* Empty State */

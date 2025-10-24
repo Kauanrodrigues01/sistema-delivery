@@ -182,11 +182,18 @@
     </div>
 
     <!-- Back Button -->
-    <div style="text-align: center; margin-top: 2rem;">
+    <div
+      style="text-align: center; margin-top: 2rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
       <a href="{% url 'orders:order_list' %}" class="btn btn-secondary"
         style="display: inline-block; padding: 0.75rem 2rem;">
         Voltar para Meus Pedidos
       </a>
+      {% if order.status == 'pending' and order.payment_status == 'pending' %}
+      <button id="cancelOrderBtn" class="btn btn-danger" style="display: inline-block; padding: 0.75rem 2rem;"
+        data-order-id="{{ order.id }}">
+        Cancelar Pedido
+      </button>
+      {% endif %}
     </div>
   </div>
 </main>
@@ -194,6 +201,42 @@
   // Initialize Lucide icons
   if (window.lucide) {
     window.lucide.createIcons();
+  }
+
+  // Handle order cancellation
+  const cancelBtn = document.getElementById('cancelOrderBtn');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', async function () {
+      if (!confirm('Tem certeza que deseja cancelar este pedido? Esta ação não pode ser desfeita.')) {
+        return;
+      }
+
+      const orderId = this.dataset.orderId;
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+        document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+
+      try {
+        const response = await fetch(`/orders/${orderId}/cancel/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          alert('Pedido cancelado com sucesso!');
+          window.location.reload();
+        } else {
+          alert(data.error || 'Erro ao cancelar pedido.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Erro ao cancelar pedido. Tente novamente.');
+      }
+    });
   }
 </script>
 {% endblock %}
