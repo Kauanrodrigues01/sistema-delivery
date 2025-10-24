@@ -149,6 +149,10 @@ class Order(models.Model):
         blank=True,
         help_text="URL do pagamento no MercadoPago (para cartão)",
     )
+    payment_integration_failed = models.BooleanField(
+        default=False,
+        help_text="Indica se a integração com o gateway de pagamento falhou",
+    )
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default="pending", db_index=True

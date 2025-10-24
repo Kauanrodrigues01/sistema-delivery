@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="{% static 'dashboard/action-buttons-style.css' %}">
 <link rel="stylesheet" href="{% static 'dashboard/order_detail.css' %}">
 <style>
-    
+
 </style>
 {% endblock %}
 
@@ -55,6 +55,16 @@
                 <div class="info-group">
                     <h4>Método de Pagamento</h4>
                     <p>{{ order.get_payment_method_display }}</p>
+                    {% if order.payment_integration_failed %}
+                    <div class="alert alert-warning"
+                        style="margin-top: 0.5rem; padding: 0.75rem; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;">
+                        <strong>⚠️ Integração Falhou:</strong>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem;">
+                            O pagamento online não pôde ser processado automaticamente.
+                            <strong>Pagamento deve ser feito manualmente.</strong>
+                        </p>
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="info-group">
                     <h4>Status do Pagamento</h4>
@@ -241,7 +251,9 @@
                     <form method="post" action="{% url 'dashboard:order_toggle_payment_status' order.pk %}"
                         style="flex: 1;">
                         {% csrf_token %}
-                        <button type="submit" class="btn {% if order.payment_status == 'pending' %}btn-payment{% else %}btn-warning{% endif %}" style="width: 100%;">
+                        <button type="submit"
+                            class="btn {% if order.payment_status == 'pending' %}btn-payment{% else %}btn-warning{% endif %}"
+                            style="width: 100%;">
                             {% if order.payment_status == 'pending' %}
                             Marcar como Pago
                             {% else %}
@@ -259,7 +271,9 @@
                 <form method="post" action="{% url 'dashboard:order_toggle_payment_status' order.pk %}"
                     style="flex: 1;">
                     {% csrf_token %}
-                    <button type="submit" class="btn {% if order.payment_status == 'pending' %}btn-payment{% else %}btn-warning{% endif %}" style="width: 100%;">
+                    <button type="submit"
+                        class="btn {% if order.payment_status == 'pending' %}btn-payment{% else %}btn-warning{% endif %}"
+                        style="width: 100%;">
                         {% if order.payment_status == 'pending' %}
                         Marcar como Pago
                         {% else %}

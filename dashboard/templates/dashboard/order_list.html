@@ -40,18 +40,18 @@
                 <select id="statusFilter" class="form-control" onchange="filterByStatus()"
                     style="flex: 1; min-width: 200px;">
                     <option value="">Status do Pedido - Todos</option>
-                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pendentes</option>
-                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Concluídos</option>
-                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelados</option>
-                    <option value="late" {% if status_filter == 'late' %}selected{% endif %}>Atrasados</option>
+                    <option value="pending" {% if status_filter=='pending' %}selected{% endif %}>Pendentes</option>
+                    <option value="completed" {% if status_filter=='completed' %}selected{% endif %}>Concluídos</option>
+                    <option value="cancelled" {% if status_filter=='cancelled' %}selected{% endif %}>Cancelados</option>
+                    <option value="late" {% if status_filter=='late' %}selected{% endif %}>Atrasados</option>
                 </select>
                 <select id="paymentStatusFilter" class="form-control" onchange="filterByStatus()"
                     style="flex: 1; min-width: 200px;">
                     <option value="">Status do Pagamento - Todos</option>
-                    <option value="pending" {% if payment_status_filter == 'pending' %}selected{% endif %}>Pendente
+                    <option value="pending" {% if payment_status_filter=='pending' %}selected{% endif %}>Pendente
                     </option>
-                    <option value="paid" {% if payment_status_filter == 'paid' %}selected{% endif %}>Pago</option>
-                    <option value="cancelled" {% if payment_status_filter == 'cancelled' %}selected{% endif %}>
+                    <option value="paid" {% if payment_status_filter=='paid' %}selected{% endif %}>Pago</option>
+                    <option value="cancelled" {% if payment_status_filter=='cancelled' %}selected{% endif %}>
                         Cancelado/Devolvido</option>
                 </select>
             </div>
@@ -123,6 +123,12 @@
                                     Cancelado
                                     {% endif %}
                                 </span>
+                                {% if order.payment_integration_failed %}
+                                <span
+                                    style="display: block; color: #856404; font-weight: bold; font-size: 0.75rem; margin-top: 0.25rem;">
+                                    ⚠️ Integração falhou
+                                </span>
+                                {% endif %}
                             </td>
                             <td>R$ {{ order.total_price|floatformat:2 }}</td>
                             <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
@@ -158,10 +164,13 @@
                                     {% if order.status == 'pending' and not order.is_finalized %}
                                     <button class="delete-btn" data-order-id="{{ order.id }}">Cancelar</button>
                                     {% endif %}
-                                    {% if order.payment_status != 'cancelled' and not order.is_finalized and order.status != 'completed' and order.status != 'cancelled' %}
-                                    <button class="{% if order.payment_status == 'pending' %}payment-btn{% else %}btn-warning{% endif %}" data-order-id="{{ order.id }}"
-                                        data-current-status="{{ order.payment_status }}">
-                                        {% if order.payment_status == 'pending' %}Marcar Pago{% else %}Marcar Pendente{% endif %}
+                                    {% if order.payment_status != 'cancelled' and not order.is_finalized and
+                                    order.status != 'completed' and order.status != 'cancelled' %}
+                                    <button
+                                        class="{% if order.payment_status == 'pending' %}payment-btn{% else %}btn-warning{% endif %}"
+                                        data-order-id="{{ order.id }}" data-current-status="{{ order.payment_status }}">
+                                        {% if order.payment_status == 'pending' %}Marcar Pago{% else %}Marcar Pendente{%
+                                        endif %}
                                     </button>
                                     {% endif %}
                                     {% endif %}
@@ -219,6 +228,12 @@
                                 {% else %}
                                 Cancelado/Devolvido
                                 {% endif %}
+                                {% if order.payment_integration_failed %}
+                                <span
+                                    style="display: block; color: #856404; font-weight: bold; font-size: 0.85rem; margin-top: 0.25rem;">
+                                    ⚠️ Integração falhou
+                                </span>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="order-card-detail">
@@ -256,13 +271,15 @@
                         {% else %}
                         <!-- Lógica normal para outros casos (pending/pending e pending/paid) -->
                         {% if order.status == 'pending' and not order.is_finalized %}
-                        <button class="complete-btn" data-order-id="{{ order.id }}"
-                            data-action="complete">Concluir Pedido</button>
+                        <button class="complete-btn" data-order-id="{{ order.id }}" data-action="complete">Concluir
+                            Pedido</button>
                         <button class="delete-btn" data-order-id="{{ order.id }}">Cancelar</button>
                         {% endif %}
-                        {% if order.payment_status != 'cancelled' and not order.is_finalized and order.status != 'completed' and order.status != 'cancelled' %}
-                        <button class="{% if order.payment_status == 'pending' %}payment-btn{% else %}btn-warning{% endif %} complete-btn" data-order-id="{{ order.id }}"
-                            data-current-status="{{ order.payment_status }}">
+                        {% if order.payment_status != 'cancelled' and not order.is_finalized and order.status !=
+                        'completed' and order.status != 'cancelled' %}
+                        <button
+                            class="{% if order.payment_status == 'pending' %}payment-btn{% else %}btn-warning{% endif %} complete-btn"
+                            data-order-id="{{ order.id }}" data-current-status="{{ order.payment_status }}">
                             {% if order.payment_status == 'pending' %}Marcar Pago{% else %}Marcar Pendente{% endif %}
                         </button>
                         {% endif %}
@@ -277,7 +294,8 @@
         </section>
 
         <!-- Pagination -->
-        {% include 'components/pagination.html' with page_obj=page_obj search_query=search_query status_filter=status_filter payment_status_filter=payment_status_filter %}
+        {% include 'components/pagination.html' with page_obj=page_obj search_query=search_query
+        status_filter=status_filter payment_status_filter=payment_status_filter %}
     </div>
 
     <!-- Modal Confirm Cancel Order -->
@@ -322,22 +340,22 @@
 
         ordersSocket = new WebSocket(socketUrl);
 
-        ordersSocket.onopen = function(e) {
+        ordersSocket.onopen = function (e) {
             console.log('WebSocket connected for orders');
         };
 
-        ordersSocket.onmessage = function(e) {
+        ordersSocket.onmessage = function (e) {
             const data = JSON.parse(e.data);
             handleOrderUpdate(data);
         };
 
-        ordersSocket.onclose = function(e) {
+        ordersSocket.onclose = function (e) {
             console.log('WebSocket disconnected. Attempting to reconnect...');
             // Attempt to reconnect after 3 seconds
             setTimeout(initWebSocket, 3000);
         };
 
-        ordersSocket.onerror = function(e) {
+        ordersSocket.onerror = function (e) {
             console.error('WebSocket error:', e);
         };
     }
@@ -476,7 +494,7 @@
     }
 
     function getStatusClass(status) {
-        switch(status) {
+        switch (status) {
             case 'pending': return 'order-pending';
             case 'completed': return 'order-completed';
             case 'cancelled': return 'order-cancelled';
@@ -485,7 +503,7 @@
     }
 
     function getStatusText(status) {
-        switch(status) {
+        switch (status) {
             case 'pending': return 'Pendente';
             case 'completed': return 'Concluído';
             case 'cancelled': return 'Cancelado';
@@ -494,7 +512,7 @@
     }
 
     function getPaymentStatusClass(status) {
-        switch(status) {
+        switch (status) {
             case 'pending': return 'order-pending';
             case 'paid': return 'order-completed';
             case 'cancelled': return 'order-cancelled';
@@ -503,7 +521,7 @@
     }
 
     function getPaymentStatusText(status) {
-        switch(status) {
+        switch (status) {
             case 'pending': return 'Pendente';
             case 'paid': return 'Pago';
             case 'cancelled': return 'Cancelado';
@@ -568,12 +586,12 @@
     }
 
     // Initialize WebSocket when page loads
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         initWebSocket();
     });
 
     // Clean up WebSocket when leaving page
-    window.addEventListener('beforeunload', function() {
+    window.addEventListener('beforeunload', function () {
         if (ordersSocket) {
             ordersSocket.close();
         }

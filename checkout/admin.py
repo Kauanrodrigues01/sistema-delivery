@@ -17,10 +17,17 @@ class OrderAdmin(admin.ModelAdmin):
         "phone",
         "payment_method",
         "payment_status",
+        "payment_integration_failed",
         "status",
         "created_at",
     )
-    list_filter = ("status", "payment_status", "payment_method", "created_at")
+    list_filter = (
+        "status",
+        "payment_status",
+        "payment_method",
+        "payment_integration_failed",
+        "created_at",
+    )
     search_fields = ("customer_name", "phone", "address")
     inlines = [OrderItemInline]
     readonly_fields = ("created_at", "total_price", "change_amount")
@@ -34,6 +41,7 @@ class OrderAdmin(admin.ModelAdmin):
                     "payment_method",
                     "cash_value",
                     "payment_status",
+                    "payment_integration_failed",
                     "total_price",
                     "change_amount",
                 )

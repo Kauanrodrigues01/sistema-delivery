@@ -143,6 +143,10 @@ class CheckoutView(TemplateView):
                         f"Erro ao criar pagamento PIX (fallback para manual): {e}"
                     )
 
+                    # Marca que a integração falhou
+                    order.payment_integration_failed = True
+                    order.save()
+
                     # Atualiza contexto para informar que será pagamento manual
                     context["payment_fallback"] = True
                     context["fallback_message"] = (
@@ -171,8 +175,9 @@ class CheckoutView(TemplateView):
                         f"Erro ao criar pagamento com cartão online (fallback para presencial): {e}"
                     )
 
-                    # Converte para cartão presencial
+                    # Converte para cartão presencial e marca que a integração falhou
                     order.payment_method = "cartao_presencial"
+                    order.payment_integration_failed = True
                     order.save()
 
                     # Atualiza contexto para informar que será pagamento presencial
