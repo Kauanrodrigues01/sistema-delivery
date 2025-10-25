@@ -12,7 +12,7 @@ class OrdersConsumer(AsyncWebsocketConsumer):
             return
 
         # Adicionar ao grupo de pedidos
-        self.group_name = "orders_updates"
+        self.group_name = "orders"
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
 

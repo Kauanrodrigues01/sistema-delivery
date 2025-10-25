@@ -1,5 +1,7 @@
 from logging import getLogger
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
@@ -117,6 +119,25 @@ class CheckoutView(TemplateView):
                     product=item.product,
                     quantity=item.quantity,
                 )
+
+            # Enviar atualização via WebSocket para dashboard
+            try:
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    "orders",
+                    {
+                        "type": "new_order",
+                        "data": {
+                            "order_id": order.id,
+                            "customer_name": order.customer_name,
+                            "status": order.status,
+                            "payment_status": order.payment_status,
+                            "total": float(order.total_price),
+                        },
+                    },
+                )
+            except Exception as e:
+                logger.error(f"Erro ao enviar atualização via WebSocket: {e}")
 
             # Envia notificação de novo pedido para todos os métodos de pagamento
             try:

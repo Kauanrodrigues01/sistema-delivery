@@ -94,8 +94,12 @@ def cancel_order(request, order_id):
                 "orders",
                 {
                     "type": "order_update",
-                    "message": "Pedido cancelado pelo cliente",
-                    "order_id": order.id,
+                    "data": {
+                        "order_id": order.id,
+                        "status": order.status,
+                        "payment_status": order.payment_status,
+                        "customer_name": order.customer_name,
+                    },
                 },
             )
         except Exception as e:
