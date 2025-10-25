@@ -196,3 +196,40 @@ def send_payment_update_notification_with_callmebot(order, previous_status=None)
     except Exception as e:
         print(f"Erro ao enviar notificação de atualização de pagamento: {e}")
         raise
+
+
+def send_order_cancellation_notification(order):
+    """
+    Envia notificação quando um pedido é cancelado pelo cliente.
+    """
+    callmebot = CallMeBot()
+
+    # Informações do pedido
+    order_id = getattr(order, "id", "N/A") or "N/A"
+    customer_name = getattr(order, "customer_name", "N/A") or "N/A"
+    phone = getattr(order, "phone", "N/A") or "N/A"
+    total_price = getattr(order, "total_price", 0) or 0
+
+    # Monta a lista de itens com quantidade
+    itens_str = "\n".join(
+        [f"  • {item.product.name} (x{item.quantity})" for item in order.items.all()]
+    )
+
+    # Mensagem para o admin
+    message = (
+        f"🚫 *PEDIDO CANCELADO PELO CLIENTE*\n\n"
+        f"*Pedido:* #{order_id}\n"
+        f"*Cliente:* {customer_name}\n"
+        f"*Telefone:* {phone}\n"
+        f"*Total:* R$ {total_price:.2f}\n\n"
+        f"*Itens do pedido:*\n{itens_str}\n\n"
+        f"⚠️ *O cliente cancelou este pedido.*\n"
+        f"Não é necessário processar esta entrega.\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    )
+
+    try:
+        callmebot.send_text_message(message)
+    except Exception as e:
+        print(f"Erro ao enviar notificação de cancelamento: {e}")
+        raise

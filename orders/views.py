@@ -51,6 +51,15 @@ def order_detail(request, order_id):
 @require_POST
 def cancel_order(request, order_id):
     """Cancela um pedido se ambos os status forem pendentes"""
+    from logging import getLogger
+
+    from asgiref.sync import async_to_sync
+    from channels.layers import get_channel_layer
+
+    from services.notifications import send_order_cancellation_notification
+
+    logger = getLogger(__name__)
+
     client_session = get_or_create_client_session(request)
 
     # Buscar o pedido
@@ -71,6 +80,26 @@ def cancel_order(request, order_id):
         order.status = "cancelled"
         order.payment_status = "cancelled"
         order.save()
+
+        # Enviar notificação de cancelamento
+        try:
+            send_order_cancellation_notification(order)
+        except Exception as e:
+            logger.error(f"Erro ao enviar notificação de cancelamento: {e}")
+
+        # Atualizar dashboard via WebSocket
+        try:
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "orders",
+                {
+                    "type": "order_update",
+                    "message": "Pedido cancelado pelo cliente",
+                    "order_id": order.id,
+                },
+            )
+        except Exception as e:
+            logger.error(f"Erro ao enviar atualização via WebSocket: {e}")
 
         messages.success(request, "Pedido cancelado com sucesso!")
         return JsonResponse({"success": True})
