@@ -124,7 +124,7 @@ class CheckoutView(TemplateView):
             try:
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
-                    "orders",
+                    "orders_updates",
                     {
                         "type": "new_order",
                         "data": {

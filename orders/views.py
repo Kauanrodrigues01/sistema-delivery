@@ -91,14 +91,14 @@ def cancel_order(request, order_id):
         try:
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
-                "orders",
+                "orders_updates",
                 {
                     "type": "order_update",
                     "data": {
                         "order_id": order.id,
                         "status": order.status,
                         "payment_status": order.payment_status,
-                        "customer_name": order.customer_name,
+                        "customer_name": getattr(order, "customer_name", None),
                     },
                 },
             )

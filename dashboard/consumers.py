@@ -1,18 +1,18 @@
 import json
 
 from channels.generic.websocket import AsyncWebsocketConsumer
-from django.contrib.auth.models import AnonymousUser
 
 
 class OrdersConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         # Verificar se o usuário está autenticado
-        if self.scope["user"] == AnonymousUser():
+        # aceita apenas usuários autenticados no dashboard
+        if getattr(self.scope, "user", None) is None or self.scope["user"].is_anonymous:
             await self.close()
             return
 
         # Adicionar ao grupo de pedidos
-        self.group_name = "orders"
+        self.group_name = "orders_updates"
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
 
