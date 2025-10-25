@@ -40,18 +40,18 @@
                 <select id="statusFilter" class="form-control" onchange="filterByStatus()"
                     style="flex: 1; min-width: 200px;">
                     <option value="">Status do Pedido - Todos</option>
-                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pendentes</option>
-                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Concluídos</option>
-                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelados</option>
-                    <option value="late" {% if status_filter == 'late' %}selected{% endif %}>Atrasados</option>
+                    <option value="pending" {% if status_filter=='pending' %}selected{% endif %}>Pendentes</option>
+                    <option value="completed" {% if status_filter=='completed' %}selected{% endif %}>Concluídos</option>
+                    <option value="cancelled" {% if status_filter=='cancelled' %}selected{% endif %}>Cancelados</option>
+                    <option value="late" {% if status_filter=='late' %}selected{% endif %}>Atrasados</option>
                 </select>
                 <select id="paymentStatusFilter" class="form-control" onchange="filterByStatus()"
                     style="flex: 1; min-width: 200px;">
                     <option value="">Status do Pagamento - Todos</option>
-                    <option value="pending" {% if payment_status_filter == 'pending' %}selected{% endif %}>Pendente
+                    <option value="pending" {% if payment_status_filter=='pending' %}selected{% endif %}>Pendente
                     </option>
-                    <option value="paid" {% if payment_status_filter == 'paid' %}selected{% endif %}>Pago</option>
-                    <option value="cancelled" {% if payment_status_filter == 'cancelled' %}selected{% endif %}>
+                    <option value="paid" {% if payment_status_filter=='paid' %}selected{% endif %}>Pago</option>
+                    <option value="cancelled" {% if payment_status_filter=='cancelled' %}selected{% endif %}>
                         Cancelado/Devolvido</option>
                 </select>
             </div>
@@ -375,8 +375,8 @@
             // If the update is a cancellation, show a red notification
             if (data.data && data.data.status === 'cancelled') {
                 showNotification('Pedido cancelado', `Pedido #${data.data.order_id} foi cancelado pelo cliente.`, 'danger');
-                // Optionally reload to ensure lists are in sync
-                setTimeout(() => { window.location.reload(); }, 1000);
+                // Espera 1.5s para garantir que a notificação apareça antes do reload
+                setTimeout(() => { window.location.reload(); }, 1500);
             } else {
                 // Show notification for other order updates
                 showNotification('Pedido atualizado!', `Pedido #${data.data.order_id} foi atualizado`);
