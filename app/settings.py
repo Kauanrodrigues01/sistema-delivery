@@ -262,22 +262,20 @@ else:
     }
 
 # Channels Configuration
-# Usar in-memory em desenvolvimento, Redis em produção
-if DEBUG:
-    # In-memory channel layer para desenvolvimento (não precisa de Redis)
-    CHANNEL_LAYERS = {
-        "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
-    }
-else:
-    # Redis para produção
-    CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels_redis.core.RedisChannelLayer",
-            "CONFIG": {
-                "hosts": [config("REDIS_URL", default="redis://localhost:6379/2")],
-            },
+# IMPORTANTE: Usar Redis sempre que houver múltiplos workers (mesmo em desenvolvimento)
+# InMemoryChannelLayer NÃO funciona com múltiplos processos/workers
+# Docker compose usa --workers 2, então precisamos de Redis
+
+REDIS_URL = config("REDIS_URL", default="redis://localhost:6379/1")
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [REDIS_URL],
         },
-    }
+    },
+}
 
 # Cache timeouts customizados
 CACHE_TIMEOUTS = {
