@@ -121,6 +121,9 @@ class CheckoutView(TemplateView):
                 )
 
             # Enviar atualização via WebSocket para dashboard
+            # NOTA: O cliente NÃO precisa estar conectado ao WebSocket
+            # Esta mensagem é enviada para o grupo "orders_updates" onde os ADMINS
+            # do dashboard estão conectados e receberão a notificação em tempo real
             try:
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
