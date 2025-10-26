@@ -164,8 +164,7 @@
                                     {% if order.status == 'pending' and not order.is_finalized %}
                                     <button class="delete-btn" data-order-id="{{ order.id }}">Cancelar</button>
                                     {% endif %}
-                                    {% if order.payment_status != 'cancelled' and not order.is_finalized and
-                                    order.status != 'completed' and order.status != 'cancelled' %}
+                                    {% if order.payment_status != 'cancelled' and not order.is_finalized and order.status != 'completed' and order.status != 'cancelled' %}
                                     <button
                                         class="{% if order.payment_status == 'pending' %}payment-btn{% else %}btn-warning{% endif %}"
                                         data-order-id="{{ order.id }}" data-current-status="{{ order.payment_status }}">
@@ -293,8 +292,7 @@
         </section>
 
         <!-- Pagination -->
-        {% include 'components/pagination.html' with page_obj=page_obj search_query=search_query
-        status_filter=status_filter payment_status_filter=payment_status_filter %}
+        {% include 'components/pagination.html' with page_obj=page_obj search_query=search_query status_filter=status_filter payment_status_filter=payment_status_filter %}
     </div>
 
     <!-- Modal Confirm Cancel Order -->
