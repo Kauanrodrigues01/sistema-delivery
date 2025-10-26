@@ -136,42 +136,43 @@
                                 <div class="order-actions">
                                     <a href="{% url 'dashboard:order_detail' order.pk %}">Ver</a>
                                     {% if order.is_totally_cancelled %}
-                                    <!-- Pedido totalmente cancelado: apenas visualização -->
-                                    <span class="status-cancelled">Cancelado</span>
+                                        <!-- Pedido totalmente cancelado: apenas visualização -->
+                                        <span class="status-cancelled">Cancelado</span>
                                     {% elif order.status == 'pending' and order.payment_status == 'cancelled' %}
-                                    <!-- Pedido pendente com pagamento cancelado: só pode cancelar o pedido -->
-                                    <button class="delete-btn" data-order-id="{{ order.id }}">Cancelar Pedido</button>
+                                        <!-- Pedido pendente com pagamento cancelado: só pode cancelar o pedido -->
+                                        <button class="delete-btn" data-order-id="{{ order.id }}">Cancelar Pedido</button>
                                     {% elif order.status == 'completed' and order.payment_status == 'cancelled' %}
-                                    <!-- Entrega concluída com pagamento cancelado: pode cancelar a entrega -->
-                                    <button class="delete-btn" data-order-id="{{ order.id }}">Cancelar Entrega</button>
+                                        <!-- Entrega concluída com pagamento cancelado: pode cancelar a entrega -->
+                                        <button class="delete-btn" data-order-id="{{ order.id }}">Cancelar Entrega</button>
                                     {% elif order.status == 'cancelled' and order.payment_status == 'pending' %}
-                                    <!-- Pedido cancelado com pagamento pendente: pode alterar pagamento -->
-                                    <button class="payment-btn" data-order-id="{{ order.id }}"
-                                        data-current-status="pending">Marcar Pago</button>
+                                        <!-- Pedido cancelado com pagamento pendente: pode alterar pagamento -->
+                                        <button class="payment-btn" data-order-id="{{ order.id }}" data-current-status="pending">Marcar Pago</button>
                                     {% elif order.status == 'cancelled' and order.payment_status == 'paid' %}
-                                    <!-- Pedido cancelado mas já pago: deve devolver o dinheiro -->
-                                    <span style="color: #dc3545; font-weight: bold; font-size: 0.8rem;">💰
-                                        Devolver</span>
+                                        <!-- Pedido cancelado mas já pago: deve devolver o dinheiro -->
+                                        <span style="color: #dc3545; font-weight: bold; font-size: 0.8rem;">💰
+                                            Devolver</span>
                                     {% elif order.status == 'completed' and order.payment_status == 'pending' %}
-                                    <!-- Entrega concluída mas pagamento pendente: pode marcar como pago -->
-                                    <button class="payment-btn" data-order-id="{{ order.id }}"
-                                        data-current-status="pending">Confirmar Pago</button>
+                                        <!-- Entrega concluída mas pagamento pendente: pode marcar como pago -->
+                                        <button class="payment-btn" data-order-id="{{ order.id }}" data-current-status="pending">Confirmar Pago</button>
                                     {% elif order.is_finalized %}
-                                    <!-- Pedido finalizado: apenas visualização -->
-                                    <span class="status-finalized">Finalizado</span>
+                                        <!-- Pedido finalizado: apenas visualização -->
+                                        <span class="status-finalized">Finalizado</span>
                                     {% else %}
-                                    <!-- Lógica normal para outros casos (pending/pending e pending/paid) -->
-                                    {% if order.status == 'pending' and not order.is_finalized %}
-                                    <button class="delete-btn" data-order-id="{{ order.id }}">Cancelar</button>
-                                    {% endif %}
-                                    {% if order.payment_status != 'cancelled' and not order.is_finalized and order.status != 'completed' and order.status != 'cancelled' %}
-                                    <button
-                                        class="{% if order.payment_status == 'pending' %}payment-btn{% else %}btn-warning{% endif %}"
-                                        data-order-id="{{ order.id }}" data-current-status="{{ order.payment_status }}">
-                                        {% if order.payment_status == 'pending' %}Marcar Pago{% else %}Marcar Pendente{%
-                                        endif %}
-                                    </button>
-                                    {% endif %}
+                                        <!-- Lógica normal para outros casos (pending/pending e pending/paid) -->
+                                        {% if order.status == 'pending' and not order.is_finalized %}
+                                            <button class="delete-btn" data-order-id="{{ order.id }}">Cancelar</button>
+                                        {% endif %}
+                                        {% if order.payment_status != 'cancelled' and not order.is_finalized and order.status != 'completed' and order.status != 'cancelled' %}
+                                            <button
+                                                class="{% if order.payment_status == 'pending' %}payment-btn{% else %}btn-warning{% endif %}"
+                                                data-order-id="{{ order.id }}" data-current-status="{{ order.payment_status }}">
+                                                {% if order.payment_status == 'pending' %}
+                                                    Marcar Pago
+                                                {% else %}
+                                                    Marcar Pendente
+                                                {% endif %}
+                                            </button>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                             </td>
