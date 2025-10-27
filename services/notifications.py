@@ -110,12 +110,11 @@ def send_order_notifications_with_callmebot(order):
 
     # Verificar se é um pagamento que falhou integração
     payment_fallback_warning = ""
-    if order.payment_method == "pix" and not order.payment_id and not order.payment_url:
+    if order.payment_integration_failed:
         payment_fallback_warning = (
             "\n\n⚠️ *ATENÇÃO:* Falha na integração - Pagamento manual necessário!"
         )
-    elif order.payment_method == "cartao_online" and not order.payment_url:
-        payment_fallback_warning = "\n\n⚠️ *ATENÇÃO:* Falha na integração - Pagamento convertido para presencial!"
+        
 
     # Mensagem para o admin
     message = (
