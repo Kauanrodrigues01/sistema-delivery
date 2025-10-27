@@ -6,4 +6,4 @@ class CheckoutConfig(AppConfig):
     name = "checkout"
 
     def ready(self):
-        pass
+        import checkout.signals  # noqa: F401
