@@ -55,6 +55,7 @@ def update_order_status(
 
         # Mapear status do MercadoPago para status do pedido
         if status == "approved" and status_detail == "accredited":
+            old_payment_status = order.payment_status
             order.payment_status = "paid"
             order.save()
 
@@ -70,18 +71,19 @@ def update_order_status(
             # Atualizar dashboard via WebSocket
             try:
                 channel_layer = get_channel_layer()
-                async_to_sync(channel_layer.group_send)(
-                    "orders_updates",
-                    {
-                        "type": "order_payment_paid",
-                        "data": {
-                            "order_id": order.id,
-                            "status": order.status,
-                            "payment_status": order.payment_status,
-                            "customer_name": getattr(order, "customer_name", None),
+                if (old_payment_status != "paid"):
+                    async_to_sync(channel_layer.group_send)(
+                        "orders_updates",
+                        {
+                            "type": "order_payment_paid",
+                            "data": {
+                                "order_id": order.id,
+                                "status": order.status,
+                                "payment_status": order.payment_status,
+                                "customer_name": getattr(order, "customer_name", None),
+                            },
                         },
-                    },
-                )
+                    )
             except Exception as e:
                 logger.error(f"Erro ao enviar atualização via WebSocket: {e}")
 
