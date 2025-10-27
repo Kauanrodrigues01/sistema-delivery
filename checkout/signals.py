@@ -1,9 +1,13 @@
+from logging import getLogger
+
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from orders.models import Order, OrderItem
+
+logger = getLogger(__name__)
 
 
 def send_order_update(order, event_type):
@@ -58,11 +62,9 @@ def order_saved(sender, instance, created, **kwargs):
     """
     try:
         if created:
+            logger.info(f"SIGNALS DE ORDER CREATED: {instance.id}")
             # Novo pedido criado
             send_order_update(instance, "new_order")
-        else:
-            # Pedido atualizado
-            send_order_update(instance, "order_update")
     except Exception:
         # Não pode falhar o signal - isso impediria o save do webhook
         pass

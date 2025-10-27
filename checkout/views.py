@@ -143,11 +143,12 @@ class CheckoutView(TemplateView):
                 logger.error(f"Erro ao enviar atualização via WebSocket: {e}")
 
             # Envia notificação de novo pedido para todos os métodos de pagamento
-            try:
-                send_order_notifications_with_callmebot(order)
-            except Exception as e:
-                logger.error(f"Erro ao enviar notificação de novo pedido: {e}")
-                return render(request, "checkout/error.html", context)
+            def send_notification(order):
+                try:
+                    send_order_notifications_with_callmebot(order)
+                except Exception as e:
+                    logger.error(f"Erro ao enviar notificação de novo pedido: {e}")
+                    return render(request, "checkout/error.html", context)
 
             # Se o pagamento for PIX, cria o pagamento e redireciona
             if payment_method == "pix":
@@ -185,6 +186,8 @@ class CheckoutView(TemplateView):
                     # Limpa o carrinho e mostra página de sucesso com aviso
                     cart.items.all().delete()
                     return render(request, "checkout/success.html", context)
+                finally:
+                    send_notification(order)
 
             if payment_method == "cartao_online":
                 try:
@@ -218,6 +221,8 @@ class CheckoutView(TemplateView):
                     # Limpa o carrinho e mostra página de sucesso com aviso
                     cart.items.all().delete()
                     return render(request, "checkout/success.html", context)
+                finally:
+                    send_notification(order)
 
             if payment_method == "cartao_presencial":
                 try:
@@ -234,6 +239,8 @@ class CheckoutView(TemplateView):
                         "Erro ao finalizar pedido. Tente novamente."
                     )
                     return render(request, "checkout/error.html", context)
+                finally:
+                    send_notification(order)
 
             if payment_method == "dinheiro":
                 try:
@@ -247,10 +254,13 @@ class CheckoutView(TemplateView):
                         "Erro ao finalizar pedido. Tente novamente."
                     )
                     return render(request, "checkout/error.html", context)
+                finally:
+                    send_notification(order)
 
             # Fallback para outros métodos de pagamento
             cart.items.all().delete()
             context = self.get_context_data()
+            send_notification(order)
             return render(request, "checkout/success.html", context)
 
         except Exception as e:

@@ -96,7 +96,7 @@ def cancel_order(request, order_id):
             async_to_sync(channel_layer.group_send)(
                 "orders_updates",
                 {
-                    "type": "order_update",
+                    "type": "order_cancelled",
                     "data": {
                         "order_id": order.id,
                         "status": order.status,

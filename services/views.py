@@ -1,11 +1,16 @@
 import json
+from logging import getLogger
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from orders.models import Order
 from services.mercadopago import MercadoPagoService
 from services.notifications import send_payment_update_notification_with_callmebot
+
+logger = getLogger(__name__)
 
 
 def update_order_status(
@@ -62,6 +67,24 @@ def update_order_status(
 
                 traceback.print_exc()
 
+            # Atualizar dashboard via WebSocket
+            try:
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    "orders_updates",
+                    {
+                        "type": "order_payment_paid",
+                        "data": {
+                            "order_id": order.id,
+                            "status": order.status,
+                            "payment_status": order.payment_status,
+                            "customer_name": getattr(order, "customer_name", None),
+                        },
+                    },
+                )
+            except Exception as e:
+                logger.error(f"Erro ao enviar atualização via WebSocket: {e}")
+
             return {
                 "success": True,
                 "message": f"Pedido #{order.id} marcado como pago e concluído",
@@ -81,6 +104,24 @@ def update_order_status(
                 send_payment_update_notification_with_callmebot(order)
             except Exception as e:
                 print(f"Erro ao enviar notificação WhatsApp: {e}")
+            
+            # Atualizar dashboard via WebSocket
+            try:
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.group_send)(
+                    "orders_updates",
+                    {
+                        "type": "order_payment_cancelled",
+                        "data": {
+                            "order_id": order.id,
+                            "status": order.status,
+                            "payment_status": order.payment_status,
+                            "customer_name": getattr(order, "customer_name", None),
+                        },
+                    },
+                )
+            except Exception as e:
+                logger.error(f"Erro ao enviar atualização via WebSocket: {e}")
 
             return {
                 "success": True,

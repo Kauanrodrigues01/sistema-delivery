@@ -1,10 +1,15 @@
+from logging import getLogger
+
 from django.conf import settings
 
+from orders.models import Order
 from services.callmebot import CallMeBot
 from services.evolution import EvolutionAPI
 
+logger = getLogger(__name__)
 
-def send_order_notifications(order):
+
+def send_order_notifications(order: Order):
     """
     Envia mensagens WhatsApp para o admin e para o cliente após o checkout.
     """
@@ -78,7 +83,7 @@ def send_order_notifications(order):
         print(f"Erro ao enviar mensagem ao cliente: {e}")
 
 
-def send_order_notifications_with_callmebot(order):
+def send_order_notifications_with_callmebot(order: Order):
     callmebot = CallMeBot()
 
     # Monta a lista de itens com quantidade
@@ -110,11 +115,12 @@ def send_order_notifications_with_callmebot(order):
 
     # Verificar se é um pagamento que falhou integração
     payment_fallback_warning = ""
+    logger.info(f"Falha na integração de pagamento: {order.payment_integration_failed}")
     if order.payment_integration_failed:
+        logger.info("Pedido com falha na integração de pagamento detectado.")
         payment_fallback_warning = (
             "\n\n⚠️ *ATENÇÃO:* Falha na integração - Pagamento manual necessário!"
         )
-        
 
     # Mensagem para o admin
     message = (
@@ -128,6 +134,8 @@ def send_order_notifications_with_callmebot(order):
         f"*Pagamento:*\n{payment_info}{payment_fallback_warning}\n\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━━"
     )
+    logger.info("Enviando notificação de novo pedido via CallMeBot")
+    logger.debug(f"Mensagem do pedido: {message}")
     callmebot.send_text_message(message)
 
 

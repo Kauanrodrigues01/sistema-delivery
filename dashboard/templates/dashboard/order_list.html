@@ -247,43 +247,39 @@
                     <div class="order-card-actions">
                         <a href="{% url 'dashboard:order_detail' order.pk %}" class="add-btn">Ver</a>
                         {% if order.is_totally_cancelled %}
-                        <!-- Pedido totalmente cancelado: apenas visualização -->
-                        <span class="status-cancelled">Cancelado</span>
+                            <!-- Pedido totalmente cancelado: apenas visualização -->
+                            <span class="status-cancelled">Cancelado</span>
                         {% elif order.status == 'pending' and order.payment_status == 'cancelled' %}
-                        <!-- Pedido pendente com pagamento cancelado: só pode cancelar o pedido -->
-                        <button class="delete-btn" data-order-id="{{ order.id }}">Cancelar Pedido</button>
+                            <!-- Pedido pendente com pagamento cancelado: só pode cancelar o pedido -->
+                            <button class="delete-btn" data-order-id="{{ order.id }}">Cancelar Pedido</button>
                         {% elif order.status == 'completed' and order.payment_status == 'cancelled' %}
-                        <!-- Entrega concluída com pagamento cancelado: pode cancelar a entrega -->
-                        <button class="delete-btn" data-order-id="{{ order.id }}">Cancelar Entrega</button>
+                            <!-- Entrega concluída com pagamento cancelado: pode cancelar a entrega -->
+                            <button class="delete-btn" data-order-id="{{ order.id }}">Cancelar Entrega</button>
                         {% elif order.status == 'cancelled' and order.payment_status == 'pending' %}
-                        <!-- Pedido cancelado com pagamento pendente: pode alterar pagamento -->
-                        <button class="payment-btn complete-btn" data-order-id="{{ order.id }}"
-                            data-current-status="pending">Marcar Pago</button>
+                            <!-- Pedido cancelado com pagamento pendente: pode alterar pagamento -->
+                            <button class="payment-btn complete-btn" data-order-id="{{ order.id }}" data-current-status="pending">Marcar Pago</button>
                         {% elif order.status == 'cancelled' and order.payment_status == 'paid' %}
-                        <!-- Pedido cancelado mas já pago: deve devolver o dinheiro -->
-                        <span style="color: #dc3545; font-weight: bold; font-size: 0.9rem; padding: 0.5rem;">💰
-                            Devolver</span>
+                            <!-- Pedido cancelado mas já pago: deve devolver o dinheiro -->
+                            <span style="color: #dc3545; font-weight: bold; font-size: 0.9rem; padding: 0.5rem;">💰 Devolver</span>
                         {% elif order.status == 'completed' and order.payment_status == 'pending' %}
-                        <!-- Entrega concluída mas pagamento pendente: pode marcar como pago -->
-                        <button class="payment-btn complete-btn" data-order-id="{{ order.id }}"
-                            data-current-status="pending">Confirmar Pago</button>
+                            <!-- Entrega concluída mas pagamento pendente: pode marcar como pago -->
+                            <button class="payment-btn complete-btn" data-order-id="{{ order.id }}" data-current-status="pending">Confirmar Pago</button>
                         {% elif order.is_finalized %}
-                        <!-- Pedido finalizado: apenas visualização -->
-                        <span class="status-finalized">Finalizado</span>
+                            <!-- Pedido finalizado: apenas visualização -->
+                            <span class="status-finalized">Finalizado</span>
                         {% else %}
-                        <!-- Lógica normal para outros casos (pending/pending e pending/paid) -->
-                        {% if order.status == 'pending' and not order.is_finalized %}
-                        <button class="complete-btn" data-order-id="{{ order.id }}" data-action="complete">Concluir
-                            Pedido</button>
-                        <button class="delete-btn" data-order-id="{{ order.id }}">Cancelar</button>
-                        {% endif %}
-                        {% if order.payment_status != 'cancelled' and not order.is_finalized and order.status !=
-                        'completed' and order.status != 'cancelled' %}
-                        <button
-                            class="{% if order.payment_status == 'pending' %}payment-btn{% else %}btn-warning{% endif %} complete-btn"
-                            data-order-id="{{ order.id }}" data-current-status="{{ order.payment_status }}">
-                            {% if order.payment_status == 'pending' %}Marcar Pago{% else %}Marcar Pendente{% endif %}
-                        </button>
+                            <!-- Lógica normal para outros casos (pending/pending e pending/paid) -->
+                            {% if order.status == 'pending' and not order.is_finalized %}
+                                <button class="complete-btn" data-order-id="{{ order.id }}" data-action="complete">Concluir Pedido</button>
+                                <button class="delete-btn" data-order-id="{{ order.id }}">Cancelar</button>
+                            {% endif %}
+                            {% if order.payment_status != 'cancelled' and not order.is_finalized and order.status != 'completed' and order.status != 'cancelled' %}
+                            <button
+                                class="{% if order.payment_status == 'pending' %}payment-btn{% else %}btn-warning{% endif %} complete-btn"
+                                data-order-id="{{ order.id }}" data-current-status="{{ order.payment_status }}">
+                                {% if order.payment_status == 'pending' %}Marcar Pago{% else %}Marcar Pendente{% endif %}
+                            </button>
+                            {% endif %}
                         {% endif %}
                     </div>
                 </div>
@@ -361,6 +357,7 @@
     }
 
     function handleOrderUpdate(data) {
+        console.log("Verificando tipo de notifacação webhook");
         if (data.type === 'new_order') {
             // Show notification for new order
             showNotification('Novo pedido recebido!', `Pedido #${data.data.order_id} de ${data.data.customer_name}`);
@@ -368,7 +365,7 @@
             // Reload page to show new order (simple approach)
             setTimeout(() => {
                 window.location.reload();
-            }, 1000);
+            }, 2000);
         } else if (data.type === 'order_update') {
             // Update existing order in the DOM
             updateOrderInDOM(data.data);
@@ -377,11 +374,27 @@
             if (data.data && data.data.status === 'cancelled') {
                 showNotification('Pedido cancelado', `Pedido #${data.data.order_id} foi cancelado pelo cliente.`, 'danger');
                 // Espera 1.5s para garantir que a notificação apareça antes do reload
-                setTimeout(() => { window.location.reload(); }, 1500);
+                setTimeout(() => { window.location.reload(); }, 2000);
             } else {
                 // Show notification for other order updates
                 showNotification('Pedido atualizado!', `Pedido #${data.data.order_id} foi atualizado`);
             }
+        } else if (data.type === 'order_cancelled') {
+            updateOrderInDOM(data.data);
+
+            showNotification('Pedido cancelado', `Pedido #${data.data.order_id} foi cancelado pelo cliente.`, 'danger');
+        } else if (data.type === 'order_payment_paid') {
+            // Update existing order in the DOM
+            updateOrderInDOM(data.data);
+
+            // Show notification for payment update
+            showNotification('Pagamento efetuado!', `Pagamento do pedido #${data.data.order_id} foi marcado como pago`);
+        } else if (data.type === 'order_payment_cancelled') {
+            // Update existing order in the DOM
+            updateOrderInDOM(data.data);
+
+            // Show notification for payment update
+            showNotification('Pagamento cancelado!', `Pagamento do pedido #${data.data.order_id} foi cancelado ou expirado`);
         } else if (data.type === 'order_item_added') {
             // Update existing order in the DOM
             updateOrderInDOM(data.data);
@@ -416,19 +429,19 @@
     function updateTableRow(row, orderData) {
         // Update status
         const statusCell = row.querySelector('td:nth-child(4)');
-        if (statusCell) {
+        if (statusCell && orderData.status !== undefined) {
             statusCell.innerHTML = getStatusHTML(orderData.status, orderData.is_late);
         }
 
         // Update payment status
         const paymentCell = row.querySelector('td:nth-child(5)');
-        if (paymentCell) {
+        if (paymentCell && orderData.payment_status !== undefined) {
             paymentCell.innerHTML = getPaymentStatusHTML(orderData.payment_status);
         }
 
         // Update total price
         const totalCell = row.querySelector('td:nth-child(6)');
-        if (totalCell) {
+        if (totalCell && orderData.total_price !== undefined) {
             totalCell.textContent = `R$ ${orderData.total_price.toFixed(2)}`;
         }
 
@@ -443,20 +456,20 @@
     function updateOrderCard(card, orderData) {
         // Update status in header
         const statusElement = card.querySelector('.order-card-status');
-        if (statusElement) {
+        if (statusElement && orderData.status !== undefined) {
             statusElement.className = `order-card-status ${getStatusClass(orderData.status)}`;
             statusElement.textContent = getStatusText(orderData.status);
         }
 
         // Update payment status
         const paymentDetail = card.querySelector('.order-card-detail:nth-child(4) .order-card-detail-value');
-        if (paymentDetail) {
+        if (paymentDetail && orderData.payment_status !== undefined) {
             paymentDetail.textContent = getPaymentStatusText(orderData.payment_status);
         }
 
         // Update total price
         const totalDetail = card.querySelector('.order-card-detail:nth-child(3) .order-card-detail-value');
-        if (totalDetail) {
+        if (totalDetail && orderData.total_price !== undefined) {
             totalDetail.textContent = `R$ ${orderData.total_price.toFixed(2)}`;
         }
 

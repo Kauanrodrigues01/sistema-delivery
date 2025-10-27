@@ -83,6 +83,25 @@ class OrdersConsumer(AsyncWebsocketConsumer):
         await self.send(
             text_data=json.dumps({"type": "new_order", "data": event["data"]})
         )
+    
+    # Receber mensagem de pedido cancelado pelo cliente
+    async def order_cancelled(self, event):
+        # Enviar mensagem para WebSocket
+        await self.send(
+            text_data=json.dumps({"type": "order_cancelled", "data": event["data"]})
+        )
+
+    async def order_payment_paid(self, event):
+        # Enviar mensagem para WebSocket
+        await self.send(
+            text_data=json.dumps({"type": "order_payment_paid", "data": event["data"]})
+        )
+
+    async def order_payment_cancelled(self, event):
+        # Enviar mensagem para WebSocket
+        await self.send(
+            text_data=json.dumps({"type": "order_payment_cancelled", "data": event["data"]})
+        )
 
     # Receber mensagem de item adicionado
     async def order_item_added(self, event):
