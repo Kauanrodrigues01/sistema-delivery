@@ -1,21 +1,4 @@
 services:
-  redis:
-    image: redis:8.2-alpine
-    restart: unless-stopped
-    # Sem exposição de porta - apenas comunicação interna entre containers
-    expose:
-      - "6379"
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-    networks:
-      - delivery_network
-
   web:
     build:
       context: .
@@ -37,8 +20,8 @@ services:
       - LANGUAGE_CODE=${LANGUAGE_CODE:-pt-br}
       - TIME_ZONE=${TIME_ZONE:-America/Sao_Paulo}
 
-      # Redis - Usando nome do serviço como hostname
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/1
+      # Redis - Usar Redis externo compartilhado entre projetos
+      - REDIS_URL=${REDIS_URL}
 
       # Superuser Settings
       - SUPERUSER_USERNAME=${SUPERUSER_USERNAME}
@@ -73,9 +56,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
-    depends_on:
-      redis:
-        condition: service_healthy
     volumes:
       - app_logs:/app/logs
     networks:
@@ -86,5 +66,4 @@ networks:
     driver: bridge
 
 volumes:
-  redis_data:
   app_logs:
