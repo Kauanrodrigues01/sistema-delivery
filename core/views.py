@@ -6,26 +6,58 @@ from django.http import JsonResponse
 def health_check(request):
     """
     Health check endpoint para monitoramento da aplicação
+    Verifica: Database, Cache (Redis) e WebSocket (Channels)
     """
+    health_status = {
+        'status': 'healthy',
+        'database': 'ok',
+        'cache': 'ok',
+        'websocket': 'ok',
+    }
+
     try:
         # Test DB connection
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
+    except Exception as e:
+        health_status['status'] = 'unhealthy'
+        health_status['database'] = f'error: {str(e)}'
 
-        # Test cache
+    try:
+        # Test cache (Redis)
         cache.set('health_check', 'ok', 30)
         cache_ok = cache.get('health_check') == 'ok'
-
-        return JsonResponse({
-            'status': 'healthy',
-            'database': 'ok',
-            'cache': 'ok' if cache_ok else 'error',
-        })
+        if not cache_ok:
+            health_status['status'] = 'unhealthy'
+            health_status['cache'] = 'error'
     except Exception as e:
-        return JsonResponse({
-            'status': 'unhealthy',
-            'error': str(e)
-        }, status=503)
+        health_status['status'] = 'unhealthy'
+        health_status['cache'] = f'error: {str(e)}'
+
+    try:
+        # Test WebSocket/Channels (verifica se consegue acessar o channel layer)
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+
+        channel_layer = get_channel_layer()
+
+        # Tenta enviar uma mensagem de teste para o channel layer
+        # Isso verifica se o Redis backend do Channels está funcionando
+        test_group = "health_check_test"
+        async_to_sync(channel_layer.group_send)(
+            test_group,
+            {
+                "type": "health.check",
+                "message": "ping"
+            }
+        )
+        health_status['websocket'] = 'ok'
+    except Exception as e:
+        health_status['status'] = 'unhealthy'
+        health_status['websocket'] = f'error: {str(e)}'
+
+    status_code = 200 if health_status['status'] == 'healthy' else 503
+    return JsonResponse(health_status, status=status_code)
 
 
 def cache_stats_view(request):

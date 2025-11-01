@@ -45,13 +45,15 @@ RUN mkdir -p /app/staticfiles /app/static /app/logs \
     && chown -R userapp:userapp /app \
     && chmod -R 755 /app/static /app/staticfiles /app/logs
 
-# Instalar curl e ferramentas básicas
+# Instalar curl para health check
 RUN apk add --no-cache curl
 
 # Porta exposta
 EXPOSE 8000
 
-HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
+# Health check que verifica HTTP, Database, Cache (Redis) e WebSocket (Channels)
+# O endpoint /health/ já faz todas as verificações necessárias
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
     CMD curl --fail http://localhost:8000/health/ || exit 1
 
 # Rodar como usuário não-root
