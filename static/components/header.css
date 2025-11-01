@@ -114,30 +114,111 @@
     display: inline;
 }
 
+/* Menu Hamburguer - visível apenas para admin em telas menores */
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    z-index: 1000;
+}
+
+.nav-toggle span {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background: #fff;
+    transition: all 0.3s ease;
+    border-radius: 3px;
+}
+
+.nav-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(7px, 7px);
+}
+
+.nav-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+}
+
 @media (max-width: 1200px) {
     .main-header-inner {
         max-width: 100%;
         gap: 2rem;
         justify-content: space-between;
+        position: relative;
+    }
+
+    /* Mostrar hamburguer apenas para admin */
+    .nav-toggle {
+        display: flex;
+        order: 3;
+    }
+
+    /* Menu hamburguer - inicialmente oculto */
+    #mainNav {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: linear-gradient(135deg, var(--header-start) 0%, var(--header-end) 100%);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-radius: 0 0 8px 8px;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+        width: 250px;
+        z-index: 999;
+    }
+
+    #mainNav.nav-open {
+        max-height: 500px;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    #mainNav ul {
+        flex-direction: column;
+        padding: 1rem 0;
+        width: 100%;
+    }
+
+    #mainNav ul li {
+        width: 100%;
+    }
+
+    #mainNav ul li a {
+        display: block;
+        width: 100%;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0;
+        text-align: left;
+    }
+
+    #mainNav ul li a:hover,
+    #mainNav ul li a.active {
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff !important;
     }
 }
 
 @media (max-width: 900px) {
     .main-header-inner {
-        flex-direction: column;
-        align-items: center;
         gap: 1.2rem;
     }
 
-    .main-header nav {
+    #mainNav {
         width: 100%;
-        justify-content: center;
-    }
-
-    .main-header nav ul {
-        width: 100%;
-        justify-content: center;
-        flex-wrap: wrap;
+        right: auto;
+        left: 0;
+        border-radius: 0 0 8px 8px;
     }
 }
 

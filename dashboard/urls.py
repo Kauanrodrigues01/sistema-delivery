@@ -53,4 +53,6 @@ urlpatterns = [
         views.customer_toggle_active,
         name="customer_toggle_active",
     ),
+    # Reports URLs
+    path("reports/", views.reports_list, name="reports_list"),
 ]

@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}Relatórios Dashboard{% endblock %}
+
+{% block head %}
+<!-- Reusando estilos do produto para manter consistência -->
+<link rel="stylesheet" href="{% static 'products/styles.css' %}">
+
+<!-- Formulários -->
+<link rel="stylesheet" href="{% static 'global/form-default-style.css' %}">
+<link rel="stylesheet" href="{% static 'global/buttons-default-style.css' %}">
+
+<link rel="stylesheet" href="{% static 'dashboard/product_list.css' %}">
+<link rel="stylesheet" href="{% static 'components/pagination/pagination.css' %}">
+
+<style>
+  .reports-table-wrapper {
+    overflow-x: auto;
+    margin-bottom: 2rem;
+  }
+
+  .reports-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .reports-table thead {
+    background: var(--primary);
+    color: white;
+  }
+
+  .reports-table th,
+  .reports-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .reports-table tbody tr:hover {
+    background: var(--surface-hover, #f5f5f5);
+  }
+
+  .reports-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .download-btn {
+    background: var(--primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+  }
+
+  .download-btn:hover {
+    background: var(--primary-dark, #2563eb);
+  }
+
+  .current-report-section {
+    background: var(--surface);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border: 2px solid var(--primary);
+  }
+
+  .current-report-section h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: var(--primary);
+  }
+
+  .current-report-section p {
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+  }
+
+  /* Responsive cards para mobile */
+  .reports-cards {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .reports-table-wrapper {
+      display: none;
+    }
+
+    .reports-cards {
+      display: block;
+    }
+
+    .report-card {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+    }
+
+    .report-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .report-card-date {
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: var(--primary);
+    }
+
+    .report-card-info {
+      display: grid;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .report-card-info-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .report-card-info-item:last-child {
+      border-bottom: none;
+    }
+
+    .report-card-info-label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .report-card-info-value {
+      font-weight: 600;
+    }
+  }
+
+  .text-right {
+    text-align: right;
+  }
+
+  .text-center {
+    text-align: center;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="main-content">
+  <div class="container">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <h2>Relatórios Diários</h2>
+      <p>
+        Visualize e baixe relatórios diários em PDF. Os relatórios são salvos automaticamente às 23:55 todos os dias.
+      </p>
+    </section>
+
+    <!-- Current Day Report Section -->
+    <section class="current-report-section">
+      <h3>Relatório de Hoje</h3>
+      <p>Gere o relatório do dia atual com dados em tempo real.</p>
+      <a href="{% url 'reports:daily_report_pdf' %}" class="add-btn" target="_blank">
+        Baixar Relatório de Hoje (PDF)
+      </a>
+    </section>
+
+    <!-- Filter Button -->
+    <div style="margin-bottom: 1.5rem; display: flex; gap: 0.5rem; align-items: center;">
+      <button class="add-btn" id="openFilterModal">
+        Filtrar por Data
+      </button>
+      {% if date_from or date_to %}
+      <button class="cancel-btn" id="clearFilterBtnTop">
+        Limpar Filtros
+      </button>
+      <span style="color: var(--text-secondary); font-size: 0.9rem;">
+        {% if date_from and date_to %}
+        Filtrado: {{ date_from|date:"d/m/Y" }} até {{ date_to|date:"d/m/Y" }}
+        {% elif date_from %}
+        Filtrado: a partir de {{ date_from|date:"d/m/Y" }}
+        {% elif date_to %}
+        Filtrado: até {{ date_to|date:"d/m/Y" }}
+        {% endif %}
+      </span>
+      {% endif %}
+    </div>
+
+    <!-- Reports Table (Desktop) -->
+    <section class="reports-table-wrapper">
+      <table class="reports-table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th class="text-center">Salvo em</th>
+            <th class="text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for report in reports %}
+          <tr>
+            <td><strong>{{ report.date|date:"d/m/Y" }}</strong></td>
+            <td class="text-center">{{ report.created_at|date:"d/m/Y H:i" }}</td>
+            <td class="text-center">
+              <a href="{% url 'reports:saved_report_pdf' report.id %}"
+                 class="download-btn"
+                 target="_blank">
+                Baixar PDF
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="text-center">Nenhum relatório encontrado.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Reports Cards (Mobile) -->
+    <section class="reports-cards">
+      {% for report in reports %}
+      <div class="report-card">
+        <div class="report-card-header">
+          <span class="report-card-date">{{ report.date|date:"d/m/Y" }}</span>
+        </div>
+        <div class="report-card-info">
+          <div class="report-card-info-item">
+            <span class="report-card-info-label">Salvo em</span>
+            <span class="report-card-info-value">{{ report.created_at|date:"d/m/Y H:i" }}</span>
+          </div>
+        </div>
+        <a href="{% url 'reports:saved_report_pdf' report.id %}"
+           class="download-btn"
+           target="_blank"
+           style="width: 100%; text-align: center;">
+          Baixar PDF
+        </a>
+      </div>
+      {% empty %}
+      <p>Nenhum relatório encontrado.</p>
+      {% endfor %}
+    </section>
+
+    <!-- Pagination -->
+    {% include 'components/pagination.html' with page_obj=page_obj date_from=date_from date_to=date_to %}
+  </div>
+
+  <!-- Modal Filter -->
+  <div class="modal" id="modalFilterReports">
+    <div class="modal-content form-section">
+      <h3 class="form-title">Filtrar Relatórios por Data</h3>
+      <form method="GET" action="" id="dateFilterForm">
+        <div class="form-group">
+          <label for="dateFrom">Data Inicial</label>
+          <input type="date" name="date_from" id="dateFrom" class="form-control" value="{{ date_from }}">
+        </div>
+        <div class="form-group">
+          <label for="dateTo">Data Final</label>
+          <input type="date" name="date_to" id="dateTo" class="form-control" value="{{ date_to }}">
+        </div>
+        <div class="form-group">
+          <button type="submit" class="add-btn w-100">Aplicar Filtros</button>
+          <button type="button" class="cancel-btn w-100" id="closeModalFilter">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Função genérica para abrir e fechar modais
+  function toggleModal(modalId, show = true) {
+    const modal = document.getElementById(modalId);
+    if (show) {
+      modal.classList.add('show');
+    } else {
+      modal.classList.remove('show');
+    }
+  }
+
+  // Handle date filter modal
+  document.addEventListener('DOMContentLoaded', function () {
+    const openFilterModal = document.getElementById('openFilterModal');
+    const closeModalFilter = document.getElementById('closeModalFilter');
+    const clearFilterBtnTop = document.getElementById('clearFilterBtnTop');
+    const dateFilterForm = document.getElementById('dateFilterForm');
+
+    // Abrir modal de filtro
+    if (openFilterModal) {
+      openFilterModal.addEventListener('click', function () {
+        toggleModal('modalFilterReports');
+      });
+    }
+
+    // Fechar modal de filtro
+    if (closeModalFilter) {
+      closeModalFilter.addEventListener('click', function () {
+        toggleModal('modalFilterReports', false);
+      });
+    }
+
+    // Limpar filtros
+    if (clearFilterBtnTop) {
+      clearFilterBtnTop.addEventListener('click', function () {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('date_from');
+        url.searchParams.delete('date_to');
+        url.searchParams.delete('page');
+        window.location.href = url;
+      });
+    }
+
+    // Remover page parameter quando filtrar
+    if (dateFilterForm) {
+      dateFilterForm.addEventListener('submit', function (e) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('page');
+      });
+    }
+
+    // Fechar modal clicando fora
+    window.addEventListener('click', function (event) {
+      if (event.target === document.getElementById('modalFilterReports')) {
+        toggleModal('modalFilterReports', false);
+      }
+    });
+  });
+</script>
+
+<script src="{% static 'global/pagination/pagination.js' %}"></script>
+<script>
+  // Initialize pagination smooth scroll for reports section
+  initializePaginationScroll('.reports-table-wrapper');
+</script>
+{% endblock %}

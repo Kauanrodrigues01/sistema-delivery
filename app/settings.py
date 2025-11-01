@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "services",
     "customers",
     "reports",
+    "django_apscheduler",
 ]
 
 

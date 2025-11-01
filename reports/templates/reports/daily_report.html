@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Diário - {{ date|date:"d/m/Y" }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #2c3e50;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .report-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .report-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 2rem;
+        }
+
+        .report-title {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .report-subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-bottom: 1rem;
+        }
+
+        .report-date {
+            font-size: 1.1rem;
+            color: #95a5a6;
+            font-weight: 500;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-top: 2.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .metrics-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 2px solid #e9ecef;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+        }
+
+        .metric-card.primary::before {
+            background: linear-gradient(90deg, #3498db, #2980b9);
+        }
+
+        .metric-card.success::before {
+            background: linear-gradient(90deg, #27ae60, #229954);
+        }
+
+        .metric-card.warning::before {
+            background: linear-gradient(90deg, #f39c12, #e67e22);
+        }
+
+        .metric-card.danger::before {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+        }
+
+        .metric-header {
+            margin-bottom: 1rem;
+        }
+
+        .metric-title {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-subtitle {
+            font-size: 0.85rem;
+            color: #95a5a6;
+        }
+
+        .alert-value {
+            color: #e74c3c;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .summary-table th,
+        .summary-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .summary-table th {
+            background: #34495e;
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .summary-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .footer {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid #ecf0f1;
+            text-align: center;
+            color: #95a5a6;
+            font-size: 0.9rem;
+        }
+
+        .footer-info {
+            margin-bottom: 0.5rem;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .report-container {
+                box-shadow: none;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <!-- Header -->
+        <div class="report-header">
+            <h1 class="report-title">Relatório Diário</h1>
+            <p class="report-subtitle">Resumo completo das operações e métricas</p>
+            <p class="report-date">{{ date|date:"l, d \d\e F \d\e Y"|title }}</p>
+        </div>
+
+        <!-- Seção: Pedidos do Dia -->
+        <div class="section-header">
+            <span>Pedidos do Dia</span>
+        </div>
+
+        <div class="metrics-grid grid-3">
+            <div class="metric-card primary">
+                <div class="metric-header">
+                    <div class="metric-title">Total de Pedidos</div>
+                </div>
+                <div class="metric-value">{{ data.quantity_orders }}</div>
+                <div class="metric-subtitle">Pedidos criados hoje</div>
+            </div>
+
+            <div class="metric-card success">
+                <div class="metric-header">
+                    <div class="metric-title">Concluídos</div>
+                </div>
+                <div class="metric-value">{{ data.quantity_orders_status_completed }}</div>
+                <div class="metric-subtitle">Pedidos finalizados</div>
+            </div>
+
+            <div class="metric-card danger">
+                <div class="metric-header">
+                    <div class="metric-title">Cancelados</div>
+                </div>
+                <div class="metric-value">{{ data.quantity_orders_status_cancelled }}</div>
+                <div class="metric-subtitle">Pedidos cancelados</div>
+            </div>
+        </div>
+
+        <div class="metrics-grid grid-2">
+            <div class="metric-card warning">
+                <div class="metric-header">
+                    <div class="metric-title">Pendentes</div>
+                </div>
+                <div class="metric-value {% if data.quantity_orders_status_pending > 0 %}alert-value{% endif %}">
+                    {{ data.quantity_orders_status_pending }}
+                </div>
+                <div class="metric-subtitle">Aguardando processamento</div>
+            </div>
+
+            <div class="metric-card {% if data.quantity_orders_late > 0 %}danger{% else %}success{% endif %}">
+                <div class="metric-header">
+                    <div class="metric-title">Atrasados</div>
+                </div>
+                <div class="metric-value {% if data.quantity_orders_late > 0 %}alert-value{% endif %}">
+                    {{ data.quantity_orders_late }}
+                </div>
+                <div class="metric-subtitle">Pedidos com mais de 25 minutos</div>
+            </div>
+        </div>
+
+        <!-- Seção: Receita do Dia -->
+        <div class="section-header">
+            <span>Receita do Dia</span>
+        </div>
+
+        <div class="metrics-grid grid-2">
+            <div class="metric-card success">
+                <div class="metric-header">
+                    <div class="metric-title">Receita Confirmada</div>
+                </div>
+                <div class="metric-value">R$ {{ data.revenue_today|floatformat:2 }}</div>
+                <div class="metric-subtitle">Pagamentos confirmados</div>
+            </div>
+
+            <div class="metric-card warning">
+                <div class="metric-header">
+                    <div class="metric-title">Receita Pendente</div>
+                </div>
+                <div class="metric-value">R$ {{ data.revenue_pending_today|floatformat:2 }}</div>
+                <div class="metric-subtitle">Aguardando pagamento</div>
+            </div>
+        </div>
+
+        <!-- Seção: Produtos -->
+        <div class="section-header">
+            <span>Produtos no Sistema</span>
+        </div>
+
+        <div class="metrics-grid grid-3">
+            <div class="metric-card primary">
+                <div class="metric-header">
+                    <div class="metric-title">Total de Produtos</div>
+                </div>
+                <div class="metric-value">{{ data.quantity_products }}</div>
+                <div class="metric-subtitle">Produtos cadastrados</div>
+            </div>
+
+            <div class="metric-card success">
+                <div class="metric-header">
+                    <div class="metric-title">Produtos Ativos</div>
+                </div>
+                <div class="metric-value">{{ data.quantity_products_active }}</div>
+                <div class="metric-subtitle">Disponíveis para venda</div>
+            </div>
+
+            <div class="metric-card danger">
+                <div class="metric-header">
+                    <div class="metric-title">Produtos Inativos</div>
+                </div>
+                <div class="metric-value">{{ data.quantity_products_inactive }}</div>
+                <div class="metric-subtitle">Indisponíveis</div>
+            </div>
+        </div>
+
+        <!-- Resumo em Tabela -->
+        <div class="section-header">
+            <span>Resumo Executivo</span>
+        </div>
+
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th>Métrica</th>
+                    <th>Valor</th>
+                    <th>Descrição</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Total de Pedidos</strong></td>
+                    <td>{{ data.quantity_orders }}</td>
+                    <td>Todos os pedidos criados hoje</td>
+                </tr>
+                <tr>
+                    <td><strong>Taxa de Conclusão</strong></td>
+                    <td>{{ data.taxa_conclusao|floatformat:1 }}%</td>
+                    <td>Percentual de pedidos concluídos</td>
+                </tr>
+                <tr>
+                    <td><strong>Taxa de Cancelamento</strong></td>
+                    <td>{{ data.taxa_cancelamento|floatformat:1 }}%</td>
+                    <td>Percentual de pedidos cancelados</td>
+                </tr>
+                <tr>
+                    <td><strong>Receita Total</strong></td>
+                    <td>R$ {{ data.revenue_today|floatformat:2 }}</td>
+                    <td>Valor total recebido hoje</td>
+                </tr>
+                <tr>
+                    <td><strong>Ticket Médio</strong></td>
+                    <td>R$ {{ data.ticket_medio|floatformat:2 }}</td>
+                    <td>Valor médio por pedido concluído</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-info">
+                <strong>Relatório gerado em:</strong> {{ now|date:"d/m/Y \à\s H:i" }}
+            </div>
+            <div class="footer-info">
+                Sistema de Gestão de Delivery - Relatório Automatizado
+            </div>
+        </div>
+    </div>
+</body>
+</html>

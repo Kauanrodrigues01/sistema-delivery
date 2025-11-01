@@ -1,7 +1,7 @@
 {% load static %}
 
 <header class="main-header color-header mb-4">
-    <div class="container main-header-inner">
+    <div class="main-header-inner">
         <div class="logo-area">
             {% if global_info.company_logo_url %}
             <img src="{{ global_info.company_logo_url }}" alt="{{ global_info.company_name }}" class="logo-icon">
@@ -24,7 +24,17 @@
                 </p>
             </div>
         </div>
-        <nav>
+
+        {% if request.user.is_authenticated and request.user.is_superuser %}
+        <!-- Botão do menu hamburguer (visível apenas no admin em telas menores) -->
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        {% endif %}
+
+        <nav id="mainNav">
             <ul>
                 {% if request.user.is_authenticated and request.user.is_superuser %}
                 <li><a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
@@ -51,6 +61,12 @@
                     <a class="nav-link {% if request.resolver_match.url_name == 'customer_list' %}active{% endif %}"
                         href="{% url 'dashboard:customer_list' %}">
                         <span class="nav-text-full">Clientes</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link {% if request.resolver_match.url_name == 'reports_list' %}active{% endif %}"
+                        href="{% url 'dashboard:reports_list' %}">
+                        <span class="nav-text-full">Relatórios</span>
                     </a>
                 </li>
                 <li><a class="nav-link {% if request.resolver_match.url_name == 'logout' %}active{% endif %}"
@@ -84,3 +100,34 @@
         </nav>
     </div>
 </header>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const navToggle = document.getElementById('navToggle');
+    const mainNav = document.getElementById('mainNav');
+
+    if (navToggle && mainNav) {
+        navToggle.addEventListener('click', function() {
+            mainNav.classList.toggle('nav-open');
+            navToggle.classList.toggle('active');
+        });
+
+        // Fechar menu ao clicar em um link
+        const navLinks = mainNav.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                mainNav.classList.remove('nav-open');
+                navToggle.classList.remove('active');
+            });
+        });
+
+        // Fechar menu ao clicar fora
+        document.addEventListener('click', function(event) {
+            if (!mainNav.contains(event.target) && !navToggle.contains(event.target)) {
+                mainNav.classList.remove('nav-open');
+                navToggle.classList.remove('active');
+            }
+        });
+    }
+});
+</script>

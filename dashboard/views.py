@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 from django.db import models, transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods, require_POST
@@ -8,6 +9,7 @@ from django.views.decorators.http import require_http_methods, require_POST
 from customers.models import Customer
 from orders.models import Order, OrderItem
 from products.models import Category, Product
+from reports.models import DailyReport
 from utils.normalize import normalize_cpf, normalize_phone
 
 from .utils.metrics import calculate_metrics
@@ -810,3 +812,42 @@ def customer_delete(request, pk):
         )
 
     return redirect("dashboard:customer_list")
+
+
+# Reports list view
+@login_required
+def reports_list(request):
+    """Lista todos os relatórios diários salvos"""
+    if not request.user.is_superuser:
+        return redirect("product_list")
+
+    date_from = request.GET.get("date_from", "")
+    date_to = request.GET.get("date_to", "")
+
+    # Otimizar query para retornar apenas os campos necessários
+    reports = DailyReport.objects.only("id", "date", "created_at")
+
+    # Filtro por intervalo de datas
+    if date_from:
+        reports = reports.filter(date__gte=date_from)
+    if date_to:
+        reports = reports.filter(date__lte=date_to)
+
+    reports = reports.order_by("-date")
+
+    # Paginação
+    paginator = Paginator(reports, 10)  # 10 relatórios por página
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        "dashboard/reports_list.html",
+        {
+            "reports": page_obj,
+            "date_from": date_from,
+            "date_to": date_to,
+            "page_obj": page_obj,
+            "is_paginated": page_obj.has_other_pages(),
+        },
+    )

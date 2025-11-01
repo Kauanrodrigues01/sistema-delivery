@@ -3,9 +3,11 @@ FROM python:3.13-alpine AS builder
 
 COPY requirements.txt .
 
+# Adicionar dependências de build incluindo as necessárias para WeasyPrint
 RUN apk add --no-cache --virtual .build-deps \
         ca-certificates gcc postgresql-dev linux-headers musl-dev \
-        libffi-dev jpeg-dev zlib-dev && \
+        libffi-dev jpeg-dev zlib-dev openjpeg-dev libwebp-dev g++ \
+        pango-dev harfbuzz-dev fontconfig-dev && \
     pip wheel --no-cache-dir --no-deps --wheel-dir /wheels -r requirements.txt && \
     find /usr/local \
         \( -type d -a -name test -o -name tests \) \
@@ -28,9 +30,34 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-# Copiar wheels pré-compiladas
+# Instalar dependências de runtime do WeasyPrint (apenas as essenciais)
+RUN apk add --no-cache \
+    cairo \
+    pango \
+    gdk-pixbuf \
+    fontconfig \
+    harfbuzz \
+    ttf-dejavu \
+    && find /usr/local \
+        \( -type d -a -name test -o -name tests \) \
+        -o \( -type f -a -name '*.pyc' -o -name '*.pyo' \) \
+        -exec rm -rf '{}' + \
+    && runDeps="$( \
+        scanelf --needed --nobanner --recursive /usr/local \
+            | awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
+            | sort -u \
+            | xargs -r apk info --installed \
+            | sort -u \
+    )" \
+    && apk add --virtual .rundeps $runDeps 
+
+# Copiar wheels pré-compiladas e instalar
 COPY --from=builder /wheels /wheels
-RUN pip install --no-cache /wheels/*
+RUN pip install --no-cache /wheels/* \
+    && rm -rf /wheels \
+    && find /usr/local -type d -name '__pycache__' -exec rm -rf '{}' + 2>/dev/null || true \
+    && find /usr/local -type f -name '*.pyc' -delete \
+    && find /usr/local -type f -name '*.pyo' -delete
 
 # Criar usuário não-root
 RUN adduser -D -h /app -s /bin/sh userapp
