@@ -24,17 +24,7 @@
                 </p>
             </div>
         </div>
-
-        {% if request.user.is_authenticated and request.user.is_superuser %}
-        <!-- Botão do menu hamburguer (visível apenas no admin em telas menores) -->
-        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-        {% endif %}
-
-        <nav id="mainNav">
+        <nav>
             <ul>
                 {% if request.user.is_authenticated and request.user.is_superuser %}
                 <li><a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
@@ -100,34 +90,3 @@
         </nav>
     </div>
 </header>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const navToggle = document.getElementById('navToggle');
-    const mainNav = document.getElementById('mainNav');
-
-    if (navToggle && mainNav) {
-        navToggle.addEventListener('click', function() {
-            mainNav.classList.toggle('nav-open');
-            navToggle.classList.toggle('active');
-        });
-
-        // Fechar menu ao clicar em um link
-        const navLinks = mainNav.querySelectorAll('.nav-link');
-        navLinks.forEach(link => {
-            link.addEventListener('click', function() {
-                mainNav.classList.remove('nav-open');
-                navToggle.classList.remove('active');
-            });
-        });
-
-        // Fechar menu ao clicar fora
-        document.addEventListener('click', function(event) {
-            if (!mainNav.contains(event.target) && !navToggle.contains(event.target)) {
-                mainNav.classList.remove('nav-open');
-                navToggle.classList.remove('active');
-            }
-        });
-    }
-});
-</script>

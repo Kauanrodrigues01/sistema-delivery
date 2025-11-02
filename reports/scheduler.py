@@ -57,7 +57,7 @@ def start_scheduler():
                 scheduler.add_job(
                     generate_and_save_daily_report,
                     trigger=CronTrigger(
-                        hour=23, minute=55
+                        hour=00, minute=17
                     ),  # Executa às 23:55 todos os dias
                     id="generate_daily_report",
                     name="Gerar relatório diário",
