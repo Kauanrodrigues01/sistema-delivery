@@ -21,7 +21,7 @@ def start_scheduler():
 
     # Evita inicializar o scheduler múltiplas vezes
     if scheduler is not None:
-        logger.info("Scheduler já está em execução")
+        logger.info("[SCHEDULER] Scheduler já está em execução")
         return
 
     # Só inicia o scheduler se não estiver em modo de migração, testes, collectstatic ou compress
@@ -39,7 +39,7 @@ def start_scheduler():
 
     if any(cmd in sys.argv for cmd in skip_commands):
         logger.info(
-            f"Pulando inicialização do scheduler durante comando de gerenciamento: {sys.argv}"
+            f"[SCHEDULER] Pulando inicialização do scheduler durante comando de gerenciamento: {sys.argv}"
         )
         return
 
@@ -57,8 +57,8 @@ def start_scheduler():
                 scheduler.add_job(
                     generate_and_save_daily_report,
                     trigger=CronTrigger(
-                        hour=00, minute=17
-                    ),  # Executa às 23:55 todos os dias
+                        hour=0, minute=27
+                    ),  # Executa às 00:27 todos os dias
                     id="generate_daily_report",
                     name="Gerar relatório diário",
                     replace_existing=True,
@@ -66,13 +66,20 @@ def start_scheduler():
                 )
 
                 scheduler.start()
+
+                # Log detalhado sobre os jobs agendados
+                jobs = scheduler.get_jobs()
                 logger.info(
-                    "Scheduler iniciado com sucesso. Relatórios diários serão gerados às 23:55"
+                    "[SCHEDULER] Scheduler iniciado com sucesso. Relatórios diários serão gerados às 00:17"
                 )
+                for job in jobs:
+                    logger.info(
+                        f"[SCHEDULER] Job agendado: {job.name} (ID: {job.id}) - Próxima execução: {job.next_run_time}"
+                    )
 
             except Exception as e:
                 logger.error(
-                    f"Erro ao iniciar scheduler na thread: {type(e).__name__}: {str(e)}",
+                    f"[SCHEDULER] Erro ao iniciar scheduler na thread: {type(e).__name__}: {str(e)}",
                     exc_info=True,
                 )
 
@@ -81,10 +88,10 @@ def start_scheduler():
             target=_start_scheduler_thread, daemon=True, name="SchedulerThread"
         )
         thread.start()
-        logger.info("Thread do scheduler iniciada")
+        logger.info("[SCHEDULER] Thread do scheduler iniciada")
 
     except Exception as e:
         logger.error(
-            f"Erro ao criar thread do scheduler: {type(e).__name__}: {str(e)}",
+            f"[SCHEDULER] Erro ao criar thread do scheduler: {type(e).__name__}: {str(e)}",
             exc_info=True,
         )
