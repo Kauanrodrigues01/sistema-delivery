@@ -16,7 +16,7 @@ def generate_and_save_daily_report():
     try:
         today = timezone.now().date()
 
-        logger.info(f"Iniciando geração do relatório diário para {today}")
+        logger.info(f"[TASK] Iniciando geração do relatório diário para {today}")
 
         # Calcular dados do relatório
         data = calculate_daily_report_data()
@@ -29,12 +29,15 @@ def generate_and_save_daily_report():
 
         action = "criado" if created else "atualizado"
         logger.info(
-            f"Relatório diário {action} com sucesso: {data['quantity_orders']} pedidos, "
+            f"[TASK] Relatório diário {action} com sucesso: {data['quantity_orders']} pedidos, "
             f"R$ {data['revenue_today']:.2f} em receita"
         )
 
         return report
 
     except Exception as e:
-        logger.error(f"Erro ao gerar relatório diário: {type(e).__name__}: {str(e)}", exc_info=True)
+        logger.error(
+            f"[TASK] Erro ao gerar relatório diário: {type(e).__name__}: {str(e)}",
+            exc_info=True,
+        )
         raise
