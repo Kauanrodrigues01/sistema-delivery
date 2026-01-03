@@ -1,53 +1,118 @@
-# 🚚 Sistema Delivery de Água
-
-**Sistema Delivery de Água** é uma aplicação web completa desenvolvida com **Django 5.1+**, projetada para automatizar o processo de vendas e entregas de água mineral. O sistema integra **pagamentos via Mercado Pago** (PIX/Cartão), **notificações automáticas via WhatsApp** através da Evolution API, e possui um **painel administrativo avançado** com regras de negócio complexas para gestão completa de pedidos.
-
-Com este sistema, empresas de delivery podem gerenciar produtos, categorias, pedidos, pagamentos e comunicação com clientes de forma automatizada e eficiente.
+# 🚚 Sistema de Delivery
 
 <div align="center">
 
-   ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-   ![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white)
-   ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
-   ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
-   ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-   ![WhatsApp](https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)
-   ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
-   ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
-   ![JavaScript](https://img.shields.io/badge/JavaScript-323330?style=for-the-badge&logo=javascript&logoColor=F7DF1E)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Kauanrodrigues01/Kauanrodrigues01/refs/heads/main/images/projetos/sistema-delivery/dashboard.png" alt="Sistema Delivery" width="800">
+</p>
+
+**Sistema de Delivery completo e moderno** desenvolvido com **Django 5.1**, projetado para automatizar todo o processo de vendas e entregas. Integra **pagamentos Mercado Pago**, **notificações WhatsApp automatizadas**, **WebSockets em tempo real**, **geração de relatórios em PDF** e um **painel administrativo avançado** com regras de negócio complexas.
+
+[![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Django](https://img.shields.io/badge/Django-5.1-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-7.4-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Channels](https://img.shields.io/badge/Django_Channels-WebSocket-092E20?style=for-the-badge&logo=django&logoColor=white)](https://channels.readthedocs.io/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 </div>
 
 ---
 
-## ✨ Funcionalidades
+## 📋 Sobre o Projeto
 
-* 🛍️ **E-commerce Completo** com carrinho de compras e checkout inteligente
-* 💳 **Múltiplas Formas de Pagamento**: PIX, Cartão (Mercado Pago) e Dinheiro com cálculo de troco
-* 📱 **Integração WhatsApp** via Evolution API para notificações automáticas
-* 🎛️ **Painel Administrativo** com CRUD completo para produtos, categorias e pedidos
-* 📊 **Dashboard Avançado** com métricas e relatórios de vendas
-* 🔄 **Sistema de Status Duplo** (operacional + pagamento) com regras de negócio complexas
-* 🔔 **Notificações Automáticas** para admin e clientes via WhatsApp
-* 📱 **Interface Responsiva** adaptada para desktop e mobile
-* 🔒 **Webhooks Seguros** para atualizações de pagamento em tempo real
-* 📈 **Relatórios e Filtros** avançados para análise de negócio
+Sistema completo de delivery desenvolvido para otimizar operações de vendas e entregas, com foco em automação, escalabilidade e experiência do usuário. Implementa arquitetura moderna com comunicação assíncrona, cache distribuído e processamento em background.
+
+### 🎯 Principais Diferenciais
+
+- 🔄 **Comunicação em Tempo Real** - WebSockets via Django Channels para atualizações instantâneas
+- 🤖 **Automação Completa** - Notificações WhatsApp e emails automáticos baseados em eventos
+- 📊 **Relatórios Inteligentes** - Geração automática de PDFs com WeasyPrint e agendamento via APScheduler
+- 💳 **Múltiplos Métodos de Pagamento** - PIX, Cartão (Mercado Pago) e Dinheiro com troco
+- 🚀 **Alta Performance** - Cache Redis, otimização de queries e compressão de assets
+- 🐳 **Deploy Simplificado** - Containerização completa com Docker Compose
 
 ---
 
-### Stack Principal
-* **Django 5.1+**: Framework web com arquitetura MVT
-* **Python 3.10+**: Linguagem de programação principal
-* **PostgreSQL**: Banco de dados relacional para produção
-* **SQLite**: Banco local para desenvolvimento
-* **Cloudinary**: Armazenamento de imagens na nuvem
-* **WhiteNoise**: Servir arquivos estáticos em produção
+## ✨ Funcionalidades
 
-### Integrações
-* **Mercado Pago API**: Processamento de pagamentos PIX e Cartão
-* **Evolution API**: Envio de mensagens WhatsApp automatizadas
-* **CallMeBot**: Sistema de backup para notificações
-* **Docker**: Containerização e deploy
+### 🛍️ **E-commerce**
+- Catálogo de produtos com categorias e imagens otimizadas (Cloudinary)
+- Carrinho de compras persistente com sessões
+- Sistema de busca e filtros avançados
+- Checkout inteligente com validação de endereço e cálculo de frete
+
+### 💰 **Pagamentos**
+- Integração completa com Mercado Pago (PIX e Cartão)
+- Webhook para confirmação automática de pagamentos
+- Sistema de pagamento em dinheiro com cálculo de troco
+- Controle de status de pagamento em tempo real
+
+### 📱 **Notificações**
+- WhatsApp via Evolution API para confirmações e atualizações
+- Sistema de backup com CallMeBot
+- Notificações em tempo real via WebSocket
+- Templates personalizáveis de mensagens
+
+### 🎛️ **Painel Administrativo**
+- Dashboard com métricas e gráficos em tempo real
+- CRUD completo para produtos, categorias e pedidos
+- Gestão de clientes e histórico de pedidos
+- Sistema de filtros avançados e exportação de dados
+- Relatórios diários em PDF gerados automaticamente
+
+### 📊 **Relatórios e Analytics**
+- Geração automática de relatórios diários (PDF)
+- Métricas de vendas, produtos mais vendidos e receita
+- Exportação de dados em múltiplos formatos
+- Agendamento de relatórios via APScheduler
+
+### 🔐 **Segurança**
+- Autenticação de usuários com permissões granulares
+- Proteção CSRF e XSS
+- Validação de webhooks com assinatura
+- Logs estruturados e auditoria de ações
+
+---
+
+## 🛠️ Tecnologias
+
+### **Backend**
+![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-5.1-092E20?style=for-the-badge&logo=django&logoColor=white)
+![Django Channels](https://img.shields.io/badge/Django_Channels-4.3-092E20?style=for-the-badge&logo=django&logoColor=white)
+![Uvicorn](https://img.shields.io/badge/Uvicorn-ASGI-499848?style=for-the-badge&logo=gunicorn&logoColor=white)
+
+### **Banco de Dados & Cache**
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7.4-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-Dev-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
+
+### **Frontend**
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![Lucide Icons](https://img.shields.io/badge/Lucide-Icons-F56565?style=for-the-badge&logo=feather&logoColor=white)
+
+### **Infraestrutura & DevOps**
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Docker Compose](https://img.shields.io/badge/Docker_Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white)
+![WhiteNoise](https://img.shields.io/badge/WhiteNoise-Static-499848?style=for-the-badge)
+
+### **Integrações & APIs**
+![Mercado Pago](https://img.shields.io/badge/Mercado_Pago-00B1EA?style=for-the-badge&logo=mercadopago&logoColor=white)
+![WhatsApp](https://img.shields.io/badge/WhatsApp-Evolution_API-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)
+![WeasyPrint](https://img.shields.io/badge/WeasyPrint-PDF-FF6B6B?style=for-the-badge&logo=adobe-acrobat-reader&logoColor=white)
+
+### **Ferramentas & Bibliotecas**
+- **django-compressor** - Compressão de CSS/JS
+- **django-redis** - Cache distribuído
+- **django-apscheduler** - Agendamento de tarefas
+- **WeasyPrint** - Geração de PDFs
+- **Pillow** - Processamento de imagens
+- **colorlog** - Logs coloridos e estruturados
 
 ### Frontend
 * **HTML5/CSS3/JavaScript**: Interface responsiva nativa
